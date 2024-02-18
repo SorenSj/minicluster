@@ -1,6 +1,6 @@
 ---
 - name: Clean Minio Installation
-  hosts: s3
+  hosts: storage
   become: true
   gather_facts: false
   tags: [s3]
@@ -28,7 +28,7 @@
         daemon_reload: true
 
 - name: Clean Vault Installation
-  hosts: vault
+  hosts: gateway
   become: true
   gather_facts: false
   tags: [vault]
@@ -59,7 +59,7 @@
         daemon_reload: true
 
 - name: Clean Restic Installation
-  hosts: picluster:gateway
+  hosts: cluster:gateway
   become: true
   gather_facts: false
   tags: [restic]

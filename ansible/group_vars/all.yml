@@ -2,7 +2,13 @@
 # Group all variables.
 
 # Remote user name
-ansible_user: ricsanfre
+ansible_connection: ssh 
+ansible_ssh_user: sysadmin 
+ansible_ssh_pass: "Van&chai4"
+
+ansible_become: yes 
+ansible_become_method: sudo
+ansible_become_pass: "Van&chai4"
 
 # Ansible ssh private key
 ansible_ssh_private_key_file: ~/.ssh/id_rsa
@@ -11,12 +17,26 @@ ansible_ssh_private_key_file: ~/.ssh/id_rsa
 # Whether to use centralized SAN architecture or not
 centralized_san: false
 
-#######################
-# DNS configuration
-#######################
+#########################
+# Network configuration #
+#########################
+lan_gw_ip: 192.168.1.254
+lan_network_cidr: 192.168.1.0/24
+lan_network_if_ip: 192.168.1.10
+dmz_port: eth0
+dmz_network_cidr: 10.0.0.0/24
+dmz_network_if_ip: 10.0.0.1
+wifi_port: wlan0
+global_dns1: 108.162.195.90
+global_dns2: 162.159.38.251
+
+#####################
+# DNS configuration #
+#####################
 # DNS server
-dns_server: 10.0.0.1
-dns_domain: picluster.ricsanfre.com
+dns_server: '{{ dmz_network_if_ip }}'
+lan_dns_domain: mylabnet.dk
+dmz_dns_domain: minicluster.mylabnet.dk
 
 ############################
 # restic backup role variables

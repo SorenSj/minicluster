@@ -1,13 +1,13 @@
 ---
 roles:
+  - name: mrlesmithjr.netplan
+    version: v0.4.1
+  - name: ricsanfre.firewall
+    version: v1.0.0
   - name: ricsanfre.security
     version: v1.0.0
   - name: ricsanfre.ntp
     version: v1.0.0
-  - name: ricsanfre.firewall
-    version: v1.0.0
-  - name: ricsanfre.dnsmasq
-    version: v1.0.2
   - name: ricsanfre.storage
     version: v1.0.0
   - name: ricsanfre.iscsi_target
@@ -24,14 +24,22 @@ roles:
     version: v1.1.3
   - name: ricsanfre.vault
     version: v1.0.4
+#  - name: sorensj.firewall_dmz
+#    version: v1.0.0
+#  - name: sorensj.dnsmasq
+#    version: v1.0.0
+#  - name: sorensj.upgrade_apt
+#    version: v1.0.0
 collections:
   - name: community.general
-    version: 8.3.0
+    version: 8.0.1
   - name: kubernetes.core
-    version: 3.0.0
+    version: 2.4.0
   - name: community.hashi_vault
-    version: 6.1.0
+    version: 5.0.1
+  - name: community.sops
+    version: 1.6.0
   - name: ansible.posix
     version: 1.5.4
   - name: community.crypto
-    version: 2.17.1
+    version: 2.16.1

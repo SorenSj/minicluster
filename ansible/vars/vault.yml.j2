@@ -20,7 +20,7 @@ vault:
     admin:
       user: admin
       password: {{ keycloak_admin_password }}
-    picluster-admin:
+    mycluster-admin:
       user: piadmin
       password: {{ keycloak_pi_password }}
     postgresql:
@@ -86,3 +86,11 @@ vault:
     admin:
       user: admin
       password: {{ postgresql_admin_password }}
+  # MySQL
+  mysql:
+    root:
+      user: root
+      password: {{ mysql_root_password }}
+    admin:
+      user: admin
+      password: {{ mysql_admin_password }}

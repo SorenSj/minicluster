@@ -14,7 +14,7 @@ vault:
   traefik:
     basic_auth:
       user: admin
-      passwd: s1cret0
+      passwd: Van&chai4
   # Minio S3 secrets
   minio:
     root:
@@ -39,7 +39,7 @@ vault:
   elasticsearch:
     es-admin:
       user: admin
-      password: s1cret0
+      password: Van&chai4
     es-fluentd:
       user: fluentd
       password: s1cret0
@@ -53,7 +53,20 @@ vault:
   grafana:
     admin:
       user: admin
-      password: s1cret0
+      password: Van&chai4
+  # postgreSQL
+  postgresql:
+    admin:
+      user: admin
+      password: Van&chai4
+  # MySQL
+  mysql:
+    admin:
+      user: admin
+      password: Van&chai4
+    root:
+      user: root
+      password: 7sxvb3e9
 
   # Certmanager
   certmanager:

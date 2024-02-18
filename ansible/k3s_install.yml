@@ -1,7 +1,7 @@
 ---
 
 - name: Install load balancer
-  hosts: haproxy
+  hosts: gateway
   gather_facts: true
   tags: [install]
   become: true
@@ -17,8 +17,8 @@
     - name: Include vault variables
       include_vars: "vars/vault.yml"
       tags: ["always"]
-    - name: Include picluster variables
-      include_vars: "vars/picluster.yml"
+    - name: Include minicluster variables
+      include_vars: "vars/minicluster.yml"
       tags: ["always"]
   roles:
     - role: k3s/prereq
@@ -31,8 +31,8 @@
     - name: Include vault variables
       include_vars: "vars/vault.yml"
       tags: ["always"]
-    - name: Include picluster variables
-      include_vars: "vars/picluster.yml"
+    - name: Include minicluster variables
+      include_vars: "vars/minicluster.yml"
       tags: ["always"]
   roles:
     - role: k3s/master
@@ -46,8 +46,8 @@
     - name: Include vault variables
       include_vars: "vars/vault.yml"
       tags: ["always"]
-    - name: Include picluster variables
-      include_vars: "vars/picluster.yml"
+    - name: Include minicluster variables
+      include_vars: "vars/minicluster.yml"
       tags: ["always"]
   roles:
     - role: k3s/worker
@@ -59,8 +59,8 @@
     - name: Include vault variables
       include_vars: "vars/vault.yml"
       tags: ["always"]
-    - name: Include picluster variables
-      include_vars: "vars/picluster.yml"
+    - name: Include minicluster variables
+      include_vars: "vars/minicluster.yml"
       tags: ["always"]
   tasks:
     - name: "Wait for worker nodes to be ready"

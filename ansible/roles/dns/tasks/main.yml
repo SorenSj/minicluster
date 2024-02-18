@@ -11,5 +11,5 @@
     - regexp: "^DNS="
       line: "DNS={{ dns_server }}"
     - regexp: "^Domains"
-      line: "Domains={{ dns_domain }}"
+      line: "Domains={{ dmz_dns_domain }}"
   notify: restart systemd-resolved

@@ -15,13 +15,13 @@ open_iscsi_targets:
     discover: true
     auto_portal_startup: true
     auto_node_startup: true
-    portal: 10.0.0.1
-    target: iqn.2021-07.com.ricsanfre:gateway
+    portal: '{{ dmz_network_if_ip }}'
+    target: iqn.2024-01.dk.mylabnet:gateway
     login: true
     node_auth: CHAP
     node_user: "{{ open_iscsi_initiator_name }}"
     node_pass: "{{ vault.san.iscsi.node_pass }}"
-    node_user_in: iqn.2021-07.com.ricsanfre:gateway
+    node_user_in: iqn.2024-01.dk.mylabnet:gateway
     node_pass_in: "{{ vault.san.iscsi.password_mutual }}"
 
 #############################################

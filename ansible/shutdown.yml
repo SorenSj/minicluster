@@ -1,5 +1,5 @@
 ---
-- hosts: picluster
+- hosts: cluster
   become: true
   gather_facts: false
   tasks:

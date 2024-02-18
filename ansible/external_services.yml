@@ -12,9 +12,9 @@
     # Include vault variables
     - name: Include vault variables
       include_vars: "vars/vault.yml"
-    # Include picluster variables
-    - name: Include picluster variables
-      include_vars: "vars/picluster.yml"
+    # Include mycluster variables
+    - name: Include mycluster variables
+      include_vars: "vars/mycluster.yml"
 
     - name: Copy ionos secret file
       template:
@@ -94,9 +94,9 @@
     # Include vault variables
     - name: Include vault variables
       include_vars: "vars/vault.yml"
-    # Include picluster variables
-    - name: Include picluster variables
-      include_vars: "vars/picluster.yml"
+    # Include mycluster variables
+    - name: Include mycluster variables
+      include_vars: "vars/mycluster.yml"
 
     - name: Load customCA-signed TLS certificate for minio
       set_fact:
@@ -136,7 +136,7 @@
 ## Install Hashicorp Vault Server
 
 - name: Install Vault Server
-  hosts: vault
+  hosts: gateway
   gather_facts: true
   tags: [vault]
   become: true
@@ -149,9 +149,9 @@
     - name: Include vault variables
       include_vars: "vars/vault.yml"
 
-    # Include picluster variables
-    - name: Include picluster variables
-      include_vars: "vars/picluster.yml"
+    # Include mycluster variables
+    - name: Include mycluster variables
+      include_vars: "vars/mycluster.yml"
 
     - name: Load customCA-signed TLS certificate for minio
       set_fact:
@@ -223,7 +223,7 @@
 
 ## Load all credentials into Hashicorp Vault Server
 - name: Load Vault Credentials
-  hosts: vault
+  hosts: gateway
   gather_facts: true
   tags: [vault, credentials]
   become: false
@@ -232,9 +232,9 @@
     - name: Include vault variables
       include_vars: "vars/vault.yml"
 
-    # Include picluster variables
-    - name: Include picluster variables
-      include_vars: "vars/picluster.yml"
+    # Include mycluster variables
+    - name: Include mycluster variables
+      include_vars: "vars/mycluster.yml"
 
     # Install hashicorp vault collection dependencies (hvac python package) using PIP.
     - name: Ensure PIP is installed.

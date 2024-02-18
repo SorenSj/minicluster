@@ -1,16 +1,16 @@
 ---
 
-- name: Configure Pi-cluster nodes backup
-  hosts: picluster:gateway
+- name: Configure Mini-cluster nodes backup
+  hosts: minicluster:pigate
   gather_facts: true
   tags: [backup]
   become: true
   pre_tasks:
     - name: Include vault variables
       include_vars: "vars/vault.yml"
-    # Include picluster variables
-    - name: Include picluster variables
-      include_vars: "vars/picluster.yml"
+    # Include minicluster variables
+    - name: Include minicluster variables
+      include_vars: "vars/minicluster.yml"
     - name: Load CA certificate for restic
       set_fact:
         restic_ca_cert: "{{ lookup('file','certificates/CA.pem') }}"
@@ -20,5 +20,5 @@
         restic_use_ca_cert: false
       when: enable_letsencrypt
   roles:
-    - role: ricsanfre.backup
+    - role: sysadmin.backup
       tags: [backup]

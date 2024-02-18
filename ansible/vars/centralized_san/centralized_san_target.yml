@@ -33,7 +33,7 @@ storage_volumes:
 ###################
 
 iscsi_targets:
-  - name: iqn.2021-07.com.ricsanfre:gateway
+  - name: iqn.2024-01.dk.mylabnet:gateway
     disks:
       - name: lun_node1
         path: /dev/vg_iscsi/vg_iscsi_lv_node1
@@ -52,41 +52,32 @@ iscsi_targets:
         type: block
         lunid: 3
     initiators:
-      - name: iqn.2021-07.com.ricsanfre:node1
+      - name: iqn.2024-01.dk.mylabnet:node1
         authentication:
-          userid: iqn.2021-07.com.ricsanfre:node1
+          userid: iqn.2024-01.dk.mylabnet:node1
           password: "{{ vault.san.iscsi.node_pass }}"
-          userid_mutual: iqn.2021-07.com.ricsanfre:gateway
+          userid_mutual: iqn.2024-01.dk.mylabnet:gateway
           password_mutual: "{{ vault.san.iscsi.password_mutual }}"
         mapped_luns:
           - mapped_lunid: 0
             lunid: 0
-      - name: iqn.2021-07.com.ricsanfre:node2
+      - name: iqn.2024-01.dk.mylabnet:node2
         authentication:
-          userid: iqn.2021-07.com.ricsanfre:node2
+          userid: iqn.2024-01.dk.mylabnet:node2
           password: "{{ vault.san.iscsi.node_pass }}"
-          userid_mutual: iqn.2021-07.com.ricsanfre:gateway
+          userid_mutual: iqn.2024-01.dk.mylabnet:gateway
           password_mutual: "{{ vault.san.iscsi.password_mutual }}"
         mapped_luns:
           - mapped_lunid: 0
             lunid: 1
-      - name: iqn.2021-07.com.ricsanfre:node3
+      - name: iqn.2024-01.dk.mylabnet:node3
         authentication:
-          userid: iqn.2021-07.com.ricsanfre:node3
+          userid: iqn.2024-01.dk.mylabnet:node3
           password: "{{ vault.san.iscsi.node_pass }}"
-          userid_mutual: iqn.2021-07.com.ricsanfre:gateway
+          userid_mutual: iqn.2024-01.dk.mylabnet:gateway
           password_mutual: "{{ vault.san.iscsi.password_mutual }}"
         mapped_luns:
           - mapped_lunid: 0
             lunid: 2
-      - name: iqn.2021-07.com.ricsanfre:node4
-        authentication:
-          userid: iqn.2021-07.com.ricsanfre:node4
-          password: "{{ vault.san.iscsi.node_pass }}"
-          userid_mutual: iqn.2021-07.com.ricsanfre:gateway
-          password_mutual: "{{ vault.san.iscsi.password_mutual }}"
-        mapped_luns:
-          - mapped_lunid: 0
-            lunid: 3
     portals:
-      - ip: 10.0.0.1
+      - ip: '{{ dmz_network_if_ip }}'

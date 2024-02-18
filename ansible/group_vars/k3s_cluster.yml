@@ -6,5 +6,5 @@
 ####################
 
 ntp_servers:
-  - server: 10.0.0.1
+  - server: '{{ dmz_network_if_ip }}'
     type: server

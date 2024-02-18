@@ -1,6 +1,6 @@
 ---
 # Deploy fluentbit to get logs and prometheus metrics
-- name: Deploy fluentbit on control nodes (gateway and pimaster)
+- name: Deploy fluentbit on control nodes (gateway and devmaster)
   hosts: gateway
   gather_facts: true
   tags: [logging]
@@ -10,9 +10,9 @@
     - name: Include vault variables
       include_vars: "vars/vault.yml"
       tags: ["always"]
-    # Include picluster variables
-    - name: Include picluster variables
-      include_vars: "vars/picluster.yml"
+    # Include minicluster variables
+    - name: Include minicluster variables
+      include_vars: "vars/minicluster.yml"
       tags: ["always"]
   roles:
     - role: logging/external_node
