@@ -1,4 +1,5 @@
 /ansible/roles/ricsanfre.*
+/ansible/roles/sorensj.*
 /ansible/ansible_collections
 /certbot
 /certificates

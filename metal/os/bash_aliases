@@ -1,0 +1,52 @@
+# Display the size of files and directories in the current directory,
+# sorted by size in descending order.
+alias lsize='du -sh * | sort -rh'
+
+# Enhanced 'ls' commands
+# This alias enhances the 'ls' command by enabling colorized output and 
+# displaying file sizes in a human-readable format.
+alias ls='ls --color=auto -h'
+# The 'll' alias provides a shortcut for the 'ls -al' command, which presents
+# a detailed listing of files and directories included hidden files and folders.
+alias ll='ls -alF'
+# This alias simplifies the display of hidden files and directories by running
+# the 'ls -a' command
+alias la='ls -a'
+
+# Text searching
+# The 'grep' alias enables case-insensitive text searching with colorized output
+alias grep='grep --color=auto -i'
+
+# Simplified directory creation
+# This alias allows you to create directories and their parent directories in
+# a single command, eliminating the need for multiple 'mkdir' calls. Here, the
+# -p flag allow you to create parent directories if they don't exist
+alias mkdir='mkdir -p'
+
+# File Manipulation Aliases
+# The 'rm' alias adds an interactive prompt before deleting files, reducing
+# the risk of accidental deletions
+alias rm='rm -i'
+# This alias prompts for confirmation before overwriting files during the copy
+# operation, providing an additional layer of safety
+alias cp='cp -i'
+# The 'mv' alias ensures that you're prompted for confirmation before
+# overwriting existing files when moving them
+alias mv='mv -i'
+
+# Disk Usage Aliases
+# The 'df' alias displays disk usage in a human-readable format, providing an
+# overview of available space
+alias df='df -h'
+# This alias shows detailed disk usage of files and directories in a
+# human-readable format, aiding in storage analysis
+alias du='du -h'
+
+# System Administration Aliases
+# The 'sudo' alias preserves the user environment when running commands with
+# elevated privileges, ensuring consistency
+alias sudo='sudo -E'
+
+# Docker command
+# Alias for docker-compose command
+alias docker-compose='docker compose'

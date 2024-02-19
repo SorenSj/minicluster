@@ -1,0 +1,28 @@
+---
+# Copyright (c) Ansible Project
+# GNU General Public License v3.0+ (see LICENSES/GPL-3.0-or-later.txt or https://www.gnu.org/licenses/gpl-3.0.txt)
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+- name: Test whether sops is installed
+  command: sops --help
+  ignore_errors: true
+  changed_when: false
+  register: sops_help_command
+
+- name: Install sops
+  include_tasks: install.yml
+  when: sops_help_command is failed
+
+- name: Skip sops installation
+  when: sops_help_command is not failed
+  block:
+    - name: Test whether age is installed
+      command: age --version
+      ignore_errors: true
+      changed_when: false
+      register: age_version_command
+
+    - name: Set results
+      set_fact:
+        sops_installed: true
+        age_installed: '{{ age_version_command is not failed }}'
