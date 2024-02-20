@@ -14,6 +14,10 @@
   include_tasks: remove_snap.yaml
   when: "'snapd' in ansible_facts.packages"
 
+- name: Execute x86 specific setup tasks
+  include_tasks: x86_tasks.yml
+  when: "'x86' in group_names"
+
 - name: Execute RaspberryPi specific setup tasks
   include_tasks: raspberrypi_tasks.yml
   when: "'raspberrypi' in group_names"

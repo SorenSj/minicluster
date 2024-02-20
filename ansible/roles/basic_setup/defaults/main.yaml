@@ -1,7 +1,9 @@
 ---
 
 basic_packages:
+  - bridge-utils
+
+basic_pi_packages:
   - libraspberrypi-bin
   - linux-modules-extra-raspi
   - fake-hwclock
-  - bridge-utils

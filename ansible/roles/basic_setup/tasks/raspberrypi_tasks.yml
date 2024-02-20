@@ -6,6 +6,12 @@
     update_cache: true
     state: present
 
+- name: Install common Pi packages
+  apt:
+    name: "{{ basic_pi_packages }}"
+    update_cache: true
+    state: present
+
 - name: Copy utility scripts
   copy:
     src: "scripts/{{ item }}"
