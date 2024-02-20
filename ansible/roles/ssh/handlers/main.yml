@@ -1,2 +1,13 @@
 ---
 # handlers file for ssh
+
+# Restart ssh service
+- name: Restart ssh
+  service:
+    name: ssh
+    state: restarted
+
+- name: Reload sshd systemd
+  systemd:
+    name: sshd
+    daemon_reload: true
