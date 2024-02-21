@@ -1,2 +1,13 @@
 ---
 # tasks file for gpg
+
+- name: GPG enhanced configuration
+  template:
+    src: gpg.conf.j2
+    dest: "/etc/ssh/ssh_config"
+    owner: "root"
+    group: "root"
+    mode: 0644
+    backup: yes
+  notify:
+    - Restart ssh

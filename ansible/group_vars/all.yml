@@ -21,6 +21,7 @@ centralized_san: false
 #########################
 # Network configuration #
 #########################
+lan_port: wlan0
 lan_gw_ip: 192.168.1.254
 lan_network_cidr: 192.168.1.0/24
 lan_network_if_ip: 192.168.1.10

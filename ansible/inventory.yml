@@ -17,40 +17,40 @@ all:
         storage:
           tools1:
             hostname: tools1
-            ansible_host: 10.0.0.31
+            ansible_host: 10.0.0.41
             ip: 10.0.0.31
             mac: 94:c6:91:ad:2f:61
           tools2:
             hostname: tools2
-            ansible_host: 10.0.0.32
+            ansible_host: 10.0.0.42
             ip: 10.0.0.32
             mac: c0:3f:d5:6c:e8:9d
     cluster:
       hosts:
         master1:
           hostname: master1
-          ansible_host: 10.0.0.11
-          ip: 10.0.0.11
+          ansible_host: 10.0.0.21
+          ip: 10.0.0.21
           mac: 94:c6:91:1d:72:53
         master2:
           hostname: master2
-          ansible_host: 10.0.0.12
-          ip: 10.0.0.12
+          ansible_host: 10.0.0.22
+          ip: 10.0.0.22
           mac: 94:c6:91:1d:eb:d1
         node1:
           hostname: node1
-          ansible_host: 10.0.0.21
-          ip: 10.0.0.21
+          ansible_host: 10.0.0.31
+          ip: 10.0.0.31
           mac: 80:ee:73:fa:f4:36
         node2:
           hostname: node2
-          ansible_host: 10.0.0.22
-          ip: 10.0.0.22
+          ansible_host: 10.0.0.32
+          ip: 10.0.0.32
           mac: 80:ee:73:fa:f4:33
         node3:
           hostname: node3
-          ansible_host: 10.0.0.23
-          ip: 10.0.0.23
+          ansible_host: 10.0.0.33
+          ip: 10.0.0.33
           mac: 80:ee:73:fa:f4:1d
     raspberrypi:
       hosts:

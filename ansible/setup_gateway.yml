@@ -22,6 +22,10 @@
     - role: basic_setup
       tags: [os]
   
+    # Enhanced ssh configuration
+    - role: ssh
+      tags: [os]
+
     # Security Hardening
     - role: ricsanfre.security
       tags: [security]

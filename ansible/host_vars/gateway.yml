@@ -1,42 +1,4 @@
 ---
-# Netplan configuration
-netplan_enabled: true
-netplan_config_file: /etc/netplan/50-cloud-init.yaml
-netplan_renderer: networkd
-netplan_configuration:
-  network:
-    version: 2
-    wifis:
-      wlan0:    # LAN
-        dhcp4: false
-        optional: true
-        access-points:
-          "Soren network":
-            password: "fc3c99d66f61949f33a422e314f34404342ff996c5ce49e7ddc568db016baaa2"
-        addresses:
-        - '{{ lan_network_if_ip }}/24'
-        nameservers:
-          addresses:
-          - '{{ global_dns1 }}'
-          - '{{ global_dns2 }}'
-          search:
-          - mylabnet.dk
-        routes:
-        - to: default
-          via: '{{ wan_gw_ip }}'
-        - to: '{{ dmz_network_cidr }}'
-          via: '{{ lan_network_if_ip }}'
-    ethernets:
-      eth0:   # DMZ
-        dhcp4: false
-        addresses:
-        - '{{ dmz_network_if_ip }}/24'
-        nameservers:
-          addresses:
-          - '{{ dmz_network_if_ip }}'
-          search:
-          - '{{ dmz_dns_domain }}'
-
 # gateway node variables
 
 ########################
@@ -51,7 +13,7 @@ dnsmasq_conf_template: 'dnsmasq.conf.j2'
 dnsmasq_conf_directory: '/etc/dnsmasq.d/'
 dnsmasq_upstream_dns_servers:
   - '{{ global_dns1 }}'
-  - '{{ global_dns1 }}'
+  - '{{ global_dns2 }}'
 dnsmasq_dhcp_range: '10.0.0.100,10.0.0.149'
 #dnsmasq_additional_dhcp_hosts:
 #  ethernet_switch:
@@ -70,7 +32,7 @@ dnsmasq_additional_dns_hosts:
   s3_server:
     desc: "S3 Server"
     hostname: s3
-    ip: 10.0.0.31
+    ip: 10.0.0.41
   elasticsearch:
     desc: "Elasticsearch server"
     hostname: elasticsearch
@@ -146,7 +108,7 @@ nft_define_host:
   lan interface:
     name: lan_interface
     value: "{{ lan_port }}"
-  dmz_interface:
+  dmz interface:
     name: dmz_interface
     value: "{{ dmz_port }}"
   lan network:
@@ -189,26 +151,22 @@ nft_output_host_rules:
 
 # Forwarding rules
 nft_forward_host_rules:
-  200 lan to wan tcp:
-    - iifname $lan_interface ip saddr $lan_network oifname $wan_interface tcp dport @forward_tcp_accept ct state new accept
-  201 dmz to wan tcp:
-    - iifname $dmz_interface ip saddr $dmz_network oifname $wan_interface tcp dport @forward_tcp_accept ct state new accept
-  210 wan to lan udp:
-    - iifname $lan_interface ip saddr $lan_network oifname $wan_interface udp dport @forward_udp_accept ct state new accept
-  211 dmz to lan udp:
-    - iifname $dmz_interface ip saddr $dmz_network oifname $wan_interface udp dport @forward_udp_accept ct state new accept
-  220 ssh from wan:
-    - iifname $wan_interface oifname $dmz_interface ip daddr $dmz_network tcp dport ssh ct state new accept
-  230 http from wan:
-    - iifname $wan_interface oifname $dmz_interface ip daddr $dmz_network tcp dport {http, https} ct state new accept
-  250 port-forwarding from wan:
-    - iifname $wan_interface oifname $dmz_interface ip daddr 10.0.0.10 tcp dport 8080 ct state new accept
+  200 dmz to lan tcp:
+    - iifname $dmz_interface ip saddr $dmz_network oifname $lan_interface tcp dport @forward_tcp_accept ct state new accept
+  210 lan to dmz udp:
+    - iifname $dmz_interface ip saddr $dmz_network oifname $lan_interface udp dport @forward_udp_accept ct state new accept
+  220 ssh from lan:
+    - iifname $lan_interface oifname $dmz_interface ip daddr $dmz_network tcp dport ssh ct state new accept
+  230 http from lan:
+    - iifname $lan_interface oifname $dmz_interface ip daddr $dmz_network tcp dport {http, https} ct state new accept
+  242 haproxy from lan:
+    - iifname $lan_interface oifname $dmz_interface ip daddr 10.0.0.11 tcp dport 6443 ct state new accept
+  250 port-forwarding from lan:
+    - iifname $lan_interface oifname $dmz_interface ip daddr 10.0.0.11 tcp dport 8080 ct state new accept
 # NAT Post-routing
 nft_nat_host_postrouting_rules:
-  005 masquerade lan to wan:
-    - ip saddr $lan_network oifname $wan_interface masquerade
-  005 masquerade dmz to wan:
-    - ip saddr $dmz_network oifname $wan_interface masquerade
+  005 masquerade dmz to lan:
+    - ip saddr $dmz_network oifname $lan_interface masquerade
 
 ############################
 # restic backup role variables

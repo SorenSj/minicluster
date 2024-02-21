@@ -2,6 +2,7 @@
 
 basic_packages:
   - bridge-utils
+  - add-apt-key
 
 basic_pi_packages:
   - libraspberrypi-bin
