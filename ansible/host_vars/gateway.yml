@@ -10,13 +10,13 @@ dnsmasq_domain_name: '{{ dmz_dns_domain }}'
 # Template used to provide main configuration file.
 dnsmasq_conf_template: 'dnsmasq.conf.j2'
 # Path to the main configuration file
-dnsmasq_conf_directory: '/etc/dnsmasq.d/'
+dnsmasq_conf_directory: '/etc/dnsmasq.d'
 dnsmasq_upstream_dns_servers:
   - '{{ global_dns1 }}'
   - '{{ global_dns2 }}'
 dnsmasq_dhcp_range: '10.0.0.100,10.0.0.149'
 #dnsmasq_additional_dhcp_hosts:
-#  ethernet_switch:
+#  ethernet_dhcp:
 #    desc: "PiHole server"
 #    mac: 
 #    ip: 10.0.0.91
