@@ -12,21 +12,26 @@ all:
           hostname: devmaster
           ansible_host: localhost
           ansible_connection: local
-#    external:
-#      hosts:
-#        storage:
+    external:
+      hosts:
+        storage:
+          tools2:
+            hostname: tools2
+            ansible_host: 192.168.1.12
+            ip: 192.168.1.12
+            mac: c0:3f:d5:6c:e8:9d
     minicluster:
       hosts:
         master1:
           hostname: master1
           ansible_host: 10.0.0.21
           ip: 10.0.0.21
-          mac: 94:c6:91:1d:72:53
+          mac: b8:ae:ed:71:f2:20
         master2:
           hostname: master2
           ansible_host: 10.0.0.22
           ip: 10.0.0.22
-          mac: 94:c6:91:1d:eb:d1
+          mac: 94:c6:91:14:9a:f7
         node1:
           hostname: node1
           ansible_host: 10.0.0.31
@@ -47,11 +52,6 @@ all:
           ansible_host: 10.0.0.41
           ip: 10.0.0.41
           mac: 94:c6:91:ad:2f:61
-        tools2:
-          hostname: tools2
-          ansible_host: 10.0.0.42
-          ip: 10.0.0.42
-          mac: c0:3f:d5:6c:e8:9d
     raspberrypi:
       hosts:
         gateway:

@@ -1,4 +1,4 @@
----
+#cloud-config
 autoinstall:
   apt:
     disable_components: []
@@ -7,11 +7,11 @@ autoinstall:
     mirror-selection:
       primary:
       - country-mirror
-      - arches: &id001
+      - arches:
         - amd64
         - i386
-        uri: http://archive.ubuntu.com/ubuntu/
-      - arches: &id002
+        uri: http://archive.ubuntu.com/ubuntu
+      - arches:
         - s390x
         - arm64
         - armhf
@@ -20,18 +20,13 @@ autoinstall:
         - riscv64
         uri: http://ports.ubuntu.com/ubuntu-ports
     preserve_sources_list: false
-    security:
-    - arches: *id001
-      uri: http://security.ubuntu.com/ubuntu/
-    - arches: *id002
-      uri: http://ports.ubuntu.com/ubuntu-ports
   codecs:
     install: false
   drivers:
     install: false
   identity:
     hostname: master1
-    password: $6$522UE6.cduZwAZzL$v0oPf2ocwrVmvYVmL18oFVIdYjRHO.gq6DjZB4g/voUFRd0LPvVwGcqUR/9sub9RMErMleQM/h1e7wZnu61UL.
+    password: $6$QS3J1wqGmYrGp.pf$GqOblsBLgam0642OcKv5gzNuzYC/extzlQ4.cpPfjKIqkRO7SFjbe67QtdZ9gfdUo98Z5m.FYdTEcKqcPQNEh.
     realname: System Administrator
     username: sysadmin
   kernel:
@@ -40,37 +35,19 @@ autoinstall:
     layout: dk
     toggle: null
     variant: ''
-  locale: us_US.UTF-8
+  locale: en_US.UTF-8
   network:
     ethernets:
       enp0s25:
         dhcp4: true
     version: 2
-  oem:
-    install: auto
   source:
     id: ubuntu-server
     search_drivers: false
-
-  user-data:
-    # Set TimeZone and Locale
-    timezone: Europe/Copenhagen
-    locale: dk_DK.UTF-8
-    # cloud-init not managing hosts file. only hostname is added
-    manage_etc_hosts: localhost
-    users:
-      - name: sysadmin
-        primary_group: users
-        groups: [adm, admin]
-        shell: /bin/bash
-        sudo: ALL=(ALL) NOPASSWD:ALL
-        lock_passwd: true
-        ssh_authorized_keys:
-          - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCwq6Tgyc7eUC68KMCB/XIEBxLxVKnzl28O8VvGpDNK0AYS10K4CcLTWAmKbKEt1RL0KnyPnxjshpkiA4kL9uHIV9lSTqSdwmb2qvjtZnKj9iltOBk5dPNyF3PNx7MLRETwNXymJ3WMg8vMh15C7QZ20xIb8XI4HqoO5ZX+B+lDm/y9wzwo4jIItBSxC4nywDElRFOakJkKhMv3PV5IZQCLah0DvGp9ET9Vo/bF7QqoJkHEnL7gQVYRbIC/vUK2UMvprgEOQL8cghk/SoaVHz/q8clbHUWMQMu2Q5oRs9D9Q090wsKAtbl5h4YjBWWn+nf0GPjIuiuc875d05RuOwEEcb9BFnxhMPUJf1YWEP4vBa6R4xPa4+UM1ikQAaHxx54BUnkGrBteS3906ch/v4II9HCFGjMp6zClVfMack0j0NK8Qm7D0Jx7RnQgJ4c6c7kssKE7QQ1Pj6s08tN+SezG+WvhVWpXau2GzjPSw1/U8badEZN/cIXcEHCYYqdBGLU= parallels@devmaster
-          - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDsR+jVl1P8yey6D3tC/4BSJeOd/yAP4a+1oS4fXT33BLprOSk4vfAi/KrZlvVWfQnDV1OALz4KnC1xSTfQzzJQ8nZafEBMtLiNRxrcAw7MVTu8BpwjRZhxJqxC5EvKqAb5F92gBS3ci7IatKZjCOUUrbMjYduvP99phL2lUd94lM9JuiO9V9Z1GNsFymyxfFuiqViXn4RT/l4l1+CqdsDdsDAhjNZAbulgPcv+HQgtx2gu4VWdUR28U09Cm8U3UW3dIbPKaeXLbZ8Hu1s/KLb7UKKRHi1+wWgvOlmA64QpCqnaDiPRncaB+FiTsZJfr4YpwxtZ7rvpU3wErBJAqTj1ZuAMlPo4363IUMN/r+imTONKmPc/Vz8jwdkBKMtHMSjBO8M2j5AELBoJliv7IgF7HYVQmALqyKlkEyF2hnG5RIxOAFWQ47Q+qM5caJW7eg6BAINACsIWHFynShNVFoKZOaCWjL+cSH553ExcDwXQ3pc2MPSuwTzxaIea4fGGeHs= soren@Srens-iMac
-          - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDUM48vyRwru2YI6TF2G5RY2Is4+VYs4GeDrPpnYeZXFywBZSmP0mhHRGMKHoCiA30na5tzLJ3e25krmcBE2A7ro4pmiZ13v9wiSFw6NFEEWWwScUu59QJ4gYiPbSjl/f8UkyK4KBL9i+JIkZvgdn4ZrjDIM8ctunS6ZelLL4eocv3HyKHHW8g8E6XlrigmDB56SMT74oDNluZWkW6gd/9E8RGkWMd5yw+YFql2BFHJh/xoEvhP6ag4jmhMScGjcQs+vVllym2oBpRLODYlVrETRq5O4IdY9+z+ItR4sH9pIHix3l8GjrTVAo2UYx3YQ1MQsTA1mgTizjAFag1LHnKBzhRRwqId1pHfZAXKrVGmakk7LUYiXOFt0bqvrmIzJEBwvhQte3P9tBzDeAUEpTITXXtoUQ3gY0Xz88dvDLebWL2zLCKNc7/BpeFAu49WAFOeQOe8ptNDhNnWfJY1Zy2OXx1SoX3p+/fUzQGR0iy5d9HKBIFHfG8gqYIupy/NqTs= soren@Sorens-MacBook-Pro.local
-
-  updates: security  
+  ssh:
+    allow-pw: true
+    authorized-keys: []
+    install-server: true
   storage:
     config:
     - ptable: gpt
@@ -181,7 +158,7 @@ autoinstall:
       id: mount-3
     - name: lv-srv
       volgroup: lvm_volgroup-0
-      size: -1
+      size: 675928866816B
       wipe: superblock
       preserve: false
       path: /dev/ubuntu-vg/lv-srv
@@ -196,5 +173,5 @@ autoinstall:
       device: format-4
       type: mount
       id: mount-4
-
+  updates: security
   version: 1

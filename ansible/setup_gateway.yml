@@ -52,6 +52,7 @@
 
     # PXE server
     - role: pxe-server
+      become: true
       tags: [pxe]
 
   tasks:

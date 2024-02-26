@@ -12,7 +12,7 @@
 - name: Create pxeconfig file for {{ x86_host }}
   template:
     src: "templates/pxelinux.conf.j2"
-    dest: "/srv/tftp/pxelinux.cfg/01-{{ hostvars[x86_host].mac | replace(':', '-') }}"
+    dest: "{{ tftp_dir_path }}/pxelinux.cfg/01-{{ hostvars[x86_host].mac | replace(':', '-') }}"
     owner: root
     group: root
     mode: '0644'

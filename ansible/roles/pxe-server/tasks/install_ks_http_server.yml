@@ -37,8 +37,3 @@
     loop_var: x86_host
   when:
     - groups['x86'] is defined
-
-- name: Copy ISO img
-  copy:
-    src: ../metal/x86/pxe-files/img/
-    dest: /var/www/html/images/

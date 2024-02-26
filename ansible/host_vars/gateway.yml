@@ -68,7 +68,7 @@ dnsmasq_additional_dns_hosts:
     hostname: vault
     ip: '{{ dmz_network_if_ip }}'
 dnsmasq_enable_tftp: true
-dnsmasq_tftp_root: /srv/tftp
+dnsmasq_tftp_root: '{{ tftp_dir_path }}'
 dnsmasq_additional_conf: |-
   # Enabling logs
   log-queries
@@ -172,3 +172,8 @@ nft_nat_host_postrouting_rules:
 # restic backup role variables
 ############################
 restic_clean_service: true
+
+########################
+# PXE server variables #
+########################
+kick_start_server: '{{ dmz_network_if_ip }}'

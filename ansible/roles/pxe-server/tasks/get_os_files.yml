@@ -1,0 +1,95 @@
+---
+
+- name: Create directory for image files
+  file:
+    path: /srv/iso/
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Download Ubuntu ISO image
+  ansible.builtin.get_url:
+    url: "{{ ubuntu_url_image }}"
+    dest: "/srv/iso/{{ ubuntu_live_server_iso_file }}"
+    mode: '0440'
+
+- name: Create directory for kernel and ramdisk files
+  file:
+    path: "{{ tftp_dir_path }}"
+    state: directory
+    owner: nobody
+    group: nogroup
+    mode: '0777'
+
+- name: Extract kernel and ramdisk from LiveCD
+  community.general.iso_extract:
+    image: "/srv/iso/{{ ubuntu_live_server_iso_file }}"
+    dest: "{{ tftp_dir_path }}"
+    files:
+    - casper/vmlinuz
+    - casper/initrd
+
+- name: Create directory for grub files
+  file:
+    path: "{{ tftp_dir_path }}/grub/x86_64-efi/"
+    state: directory
+    mode: '0755'
+
+- name: Extract grub files from LiveCD
+  community.general.iso_extract:
+    image: "/srv/iso/{{ ubuntu_live_server_iso_file }}"
+    dest: "{{ tftp_dir_path }}/grub/"
+    files:
+    - boot/grub/fonts/unicode.pf2
+    - boot/grub/grub.cfg
+
+- name: Extract grub efi files from LiveCD
+  community.general.iso_extract:
+    image: "/srv/iso/{{ ubuntu_live_server_iso_file }}"
+    dest: "{{ tftp_dir_path }}/grub/x86_64-efi/"
+    files:
+    - boot/grub/x86_64-efi/command.lst
+    - boot/grub/x86_64-efi/crypto.lst
+    - boot/grub/x86_64-efi/fs.lst
+    - boot/grub/x86_64-efi/terminal.lst
+
+- name: Extract efi files from LiveCD
+  community.general.iso_extract:
+    image: "/srv/iso/{{ ubuntu_live_server_iso_file }}"
+    dest: "{{ tftp_dir_path }}"
+    files:
+    - EFI/boot/bootx64.efi
+    - EFI/boot/grubx64.efi
+    - EFI/boot/mmx64.efi
+
+- name: Install PXE packages
+  package:
+    name: "{{ pxeserver_packages }}"
+    state: present
+
+- name: Install pxelinux
+  command: "apt download pxelinux"
+
+- name: Copy pxelinux.0 file
+  copy:
+    src: /usr/lib/PXELINUX/pxelinux.0
+    dest: "{{ tftp_dir_path }}"
+    mode: '644'
+    remote_src: true
+
+- name: Copy syslinux files
+  copy:
+    src: "/usr/lib/syslinux/modules/bios/{{ item }}"
+    dest: "{{ tftp_dir_path }}/{{ item }}"
+    remote_src: true
+  loop:
+    - ldlinux.c32
+    - libutil.c32
+    - menu.c32
+
+- name: Copy ISO img to webserver
+  copy:
+    src: "/srv/iso/{{ ubuntu_live_server_iso_file }}"
+    dest: "/var/www/html/images/{{ ubuntu_live_server_iso_file }}"
+    remote_src: true

@@ -3,7 +3,7 @@
 
 # Remote user name
 ansible_connection: ssh 
-ansible_ssh_user: sysadmin 
+ansible_ssh_user: sysadmin
 ansible_ssh_pass: "Van&chai4"
 ansible_ssh_port: 22
 

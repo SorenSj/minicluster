@@ -3,3 +3,8 @@
   service:
     name: apache2
     state: restarted
+
+- name: restart-tftp
+  service:
+    name: tftpd-hpa
+    state: restarted

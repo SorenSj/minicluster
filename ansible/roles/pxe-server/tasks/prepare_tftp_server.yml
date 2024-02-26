@@ -2,7 +2,7 @@
 
 - name: Create grub direcorty
   file:
-    path: "/srv/tftp/{{ item }}"
+    path: "{{ tftp_dir_path }}/{{ item }}"
     state: directory
     owner: root
     group: root
@@ -14,12 +14,7 @@
 - name: Copy grub config file
   template:
     src: "templates/grub.conf.j2"
-    dest: "/srv/tftp/grub/grub.cfg"
-
-- name: Copy boot files
-  copy:
-    src: "../metal/x86/pxe-files/boot/"
-    dest: "/srv/tftp/"
+    dest: "{{ tftp_dir_path }}/grub/grub.cfg"
 
 - name: Create autoinstall pxe config file per device
   include_tasks:
