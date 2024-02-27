@@ -54,8 +54,6 @@ autoinstall:
   storage:
     config:
     - ptable: gpt
-      serial: KINGSTON_SNV2S1000G_50026B738242E98E
-      wwn: eui.00000000000000000026b738242e98e5
       path: /dev/nvme0n1
       wipe: superblock-recursive
       preserve: false
@@ -163,10 +161,8 @@ autoinstall:
     # Set TimeZone and Locale
     timezone: Europe/Copenhagen
     locale: dk_DK.UTF-8
-
     # cloud-init not managing hosts file. only hostname is added
     manage_etc_hosts: localhost
-
     users:
       - name: sysadmin
         primary_group: users

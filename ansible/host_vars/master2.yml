@@ -54,8 +54,6 @@ autoinstall:
   storage:
     config:
     - ptable: gpt
-#      serial: WDC_WDS240G2G0B-00EPW0_184671800717
-#      wwn: '0x5001b448b9ad45f6'
       path: /dev/sda
       wipe: superblock-recursive
       preserve: false
