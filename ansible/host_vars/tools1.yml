@@ -1,111 +1,168 @@
 ---
 autoinstall:
+  version: 1
+  apt:
+    disable_components: []
+    fallback: abort
+    geoip: true
+    mirror-selection:
+      primary:
+      - country-mirror
+      - arches:
+        - amd64
+        - i386
+        uri: http://archive.ubuntu.com/ubuntu
+      - arches:
+        - s390x
+        - arm64
+        - armhf
+        - powerpc
+        - ppc64el
+        - riscv64
+        uri: http://ports.ubuntu.com/ubuntu-ports
+    preserve_sources_list: false
+  updates: security
+  codecs:
+    install: false
+  drivers:
+    install: false
+  identity:
+    hostname: tools1
+    password: $6$/P/9.xbsbeqPuTB4$KO5xuHKHXRrE2WX5JL1C3mrQ7eDbHIRCCpS6KDWSMQ/I1K4h5o73t6paZHPCaJHoPvRjZ886vAxVm/ng3By89/
+    realname: System Administrator
+    username: sysadmin
+  kernel:
+    package: linux-generic
+  keyboard:
+    layout: dk
+    toggle: null
+    variant: ''
+  locale: en_US.UTF-8
+  network:
+    ethernets:
+      eno1:
+        dhcp4: true
+    version: 2
+    wifis: {}
+  source:
+    id: ubuntu-server
+    search_drivers: false
+  ssh:
+    allow-pw: true
+    authorized-keys: []
+    install-server: true
   storage:
-    grub:
-      reorder_uefi: false
     config:
-      - ptable: gpt
-        path: /dev/sda
-        wipe: superblock-recursive
-        preserve: false
-        name: ''
-        grub_device: false
-        type: disk
-        id: disk-sda
-      - device: disk-sda
-        size: 1075M
-        wipe: superblock
-        flag: boot
-        number: 1
-        preserve: false
-        grub_device: true
-        path: /dev/sda1
-        type: partition
-        id: partition-0
-      - fstype: fat32
-        volume: partition-0
-        preserve: false
-        type: format
-        id: format-0
-      - device: disk-sda
-        size: 2G
-        wipe: superblock
-        number: 2
-        preserve: false
-        grub_device: false
-        path: /dev/sda2
-        type: partition
-        id: partition-1
-      - fstype: ext4
-        volume: partition-1
-        preserve: false
-        type: format
-        id: format-1
-      - device: disk-sda
-        size: -1
-        wipe: superblock
-        number: 3
-        preserve: false
-        grub_device: false
-        path: /dev/sda3
-        type: partition
-        id: partition-2
-      - name: ubuntu-vg
-        devices:
-          - partition-2
-        preserve: false
-        type: lvm_volgroup
-        id: lvm_volgroup-0
-      - name: ubuntu-lv
-        volgroup: lvm_volgroup-0
-        size: 30G
-        wipe: superblock
-        preserve: false
-        path: /dev/ubuntu-vg/ubuntu-lv
-        type: lvm_partition
-        id: lvm_partition-0
-      - fstype: ext4
-        volume: lvm_partition-0
-        preserve: false
-        type: format
-        id: format-3
-      - path: /
-        device: format-3
-        type: mount
-        id: mount-3
-      - name: lv-data
-        volgroup: lvm_volgroup-0
-        size: -1
-        wipe: superblock
-        preserve: false
-        path: /dev/ubuntu-vg/lv-data
-        type: lvm_partition
-        id: lvm_partition-1
-      - fstype: ext4
-        volume: lvm_partition-1
-        preserve: false
-        type: format
-        id: format-4
-      - path: /srv
-        device: format-4
-        type: mount
-        id: mount-4
-      - path: /boot
-        device: format-1
-        type: mount
-        id: mount-1
-      - path: /boot/efi
-        device: format-0
-        type: mount
-        id: mount-0
-
+    - ptable: gpt
+      serial: KINGSTON_SNV2S1000G_50026B738242E98E
+      wwn: eui.00000000000000000026b738242e98e5
+      path: /dev/nvme0n1
+      wipe: superblock-recursive
+      preserve: false
+      name: ''
+      grub_device: true
+      type: disk
+      id: disk-nvme0n1
+    - device: disk-nvme0n1
+      size: 1048576
+      flag: bios_grub
+      number: 1
+      preserve: false
+      grub_device: false
+      offset: 1048576
+      path: /dev/nvme0n1p1
+      type: partition
+      id: partition-0
+    - device: disk-nvme0n1
+      size: 2147483648
+      wipe: superblock
+      number: 2
+      preserve: false
+      grub_device: false
+      offset: 2097152
+      path: /dev/nvme0n1p2
+      type: partition
+      id: partition-1
+    - fstype: ext4
+      volume: partition-1
+      preserve: false
+      type: format
+      id: format-0
+    - device: disk-nvme0n1
+      size: 998053511168
+      wipe: superblock
+      number: 3
+      preserve: false
+      grub_device: false
+      offset: 2149580800
+      path: /dev/nvme0n1p3
+      type: partition
+      id: partition-2
+    - name: ubuntu-vg
+      devices:
+      - partition-2
+      preserve: false
+      type: lvm_volgroup
+      id: lvm_volgroup-0
+    - name: ubuntu-lv
+      volgroup: lvm_volgroup-0
+      size: 53687091200B
+      wipe: superblock
+      preserve: false
+      path: /dev/ubuntu-vg/ubuntu-lv
+      type: lvm_partition
+      id: lvm_partition-0
+    - fstype: ext4
+      volume: lvm_partition-0
+      preserve: false
+      type: format
+      id: format-2
+    - path: /
+      device: format-2
+      type: mount
+      id: mount-2
+    - name: lv-varlib
+      volgroup: lvm_volgroup-0
+      size: 107374182400B
+      wipe: superblock
+      preserve: false
+      path: /dev/ubuntu-vg/lv-varlib
+      type: lvm_partition
+      id: lvm_partition-1
+    - fstype: ext4
+      volume: lvm_partition-1
+      preserve: false
+      type: format
+      id: format-3
+    - path: /var/lib
+      device: format-3
+      type: mount
+      id: mount-3
+    - name: lv-srv
+      volgroup: lvm_volgroup-0
+      size: -1
+      wipe: superblock
+      preserve: false
+      path: /dev/ubuntu-vg/lv-srv
+      type: lvm_partition
+      id: lvm_partition-2
+    - fstype: ext4
+      volume: lvm_partition-2
+      preserve: false
+      type: format
+      id: format-4
+    - path: /srv
+      device: format-4
+      type: mount
+      id: mount-4
+    - path: /boot
+      device: format-0
+      type: mount
+      id: mount-0
   user-data:
     # Set TimeZone and Locale
     timezone: Europe/Copenhagen
     locale: dk_DK.UTF-8
-
-    # Hostname
-    hostname: tools1
 
     # cloud-init not managing hosts file. only hostname is added
     manage_etc_hosts: localhost
