@@ -10,24 +10,16 @@
       include_vars: "vars/vault.yml"
       tags: ["always"]
   roles:
-    # OS apt update
-#    - role: sorensj.upgrade_apt
-#      tags: [os]
-
-    # Network configuration
-#    - role: mrlesmithjr.netplan
-#      tags: [os]
-
     # OS basic setup tasks
     - role: basic_setup
       tags: [os]
   
     # Enhanced ssh configuration
     - role: ssh
-      tags: [os]
+      tags: [ssh]
 
     # Security Hardening
-    - role: ricsanfre.security
+    - role: sorensj.security
       tags: [security]
 
     # DNS/DHCP server configuration
@@ -52,9 +44,12 @@
 
     # PXE server
     - role: pxe-server
-      become: true
       tags: [pxe]
 
+    # Enhanced gpg configuration
+    - role: gpg
+      tags: [gpg]
+  
   tasks:
     # Aditional Tasks in case alternative architecture (centralized SAN)
     - name: Centralized SAN

@@ -4,10 +4,8 @@
 - name: GPG enhanced configuration
   template:
     src: gpg.conf.j2
-    dest: "/etc/ssh/ssh_config"
+    dest: "/etc/gpg.conf"
     owner: "root"
     group: "root"
     mode: 0644
     backup: yes
-  notify:
-    - Restart ssh

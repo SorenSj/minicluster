@@ -4,7 +4,7 @@
     name: apache2
     state: restarted
 
-- name: restart-tftp
+- name: restart-tftpd
   service:
     name: tftpd-hpa
     state: restarted

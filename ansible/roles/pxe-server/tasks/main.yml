@@ -9,10 +9,10 @@
 
 - name: Install tftp package
   apt:
-    name: tftp-hpa
+    name: tftp-hpa, tftpd-hpa
     update_cache: true
     state: present
-  notify: restart-tftp
+  notify: restart-tftpd
 
 - name: Get OS files
   include_tasks: get_os_files.yml

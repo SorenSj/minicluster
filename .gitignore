@@ -4,3 +4,4 @@
 /certbot
 /certificates
 /docs/_site
+user-data.*
