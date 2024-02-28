@@ -1,12 +1,14 @@
 set default="0"
 set timeout=5
 
-if loadfont unicode ; then
+if loadfont grub/unicode.pf2 ; then
   set gfxmode=auto
   set locale_dir=$prefix/locale
-  set lang=us_US
+  set lang=en_US
+  insmod efi_gop
+  insmod efi_uga insmod gfxterm
+  terminal_output gfxterm
 fi
-terminal_output gfxterm
 
 set menu_color_normal=white/black
 set menu_color_highlight=black/light-gray
@@ -29,6 +31,6 @@ export linux_gfx_mode
 
 menuentry 'Install Ubuntu 22.04' {
         gfxmode $linux_gfx_mode
-        linux vmlinuz ip=dhcp url=http://{{ kick_start_server }}/images/{{ ubuntu_live_server_iso_file }} autoinstall ds=nocloud-net\;s=http://{{ kick_start_server }}/ks/${net_default_mac}/ cloud-config-url=/dev/null
-        initrd initrd
+        linux casper/vmlinuz ip=dhcp boot=casper url=http://{{ kick_start_server }}/images/{{ ubuntu_live_server_iso_file }} autoinstall ds=nocloud-net\;s=http://{{ kick_start_server }}/ks/${net_default_mac}/ cloud-config-url=/dev/null
+        initrd casper/initrd
 }

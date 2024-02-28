@@ -3,16 +3,49 @@
 - name: Install Kick-start HTTP server
   include_tasks: install_ks_http_server.yml
 
-# Prepare TFTP server
-- name: Prepare TFTP server
-  include_tasks: prepare_tftp_server.yml
+- name: Install PXE packages
+  package:
+    name: "{{ pxeserver_packages }}"
+    state: present
 
-- name: Install tftp package
+- name: Install pxelinux
+#  command: "apt download pxelinux"
+  package:
+    name: pxelinux
+    state: present
+
+# Install tftp server
+- name: Install tftp packages
   apt:
     name: tftp-hpa, tftpd-hpa
     update_cache: true
     state: present
-  notify: restart-tftpd
 
-- name: Get OS files
-  include_tasks: get_os_files.yml
+# Prepare tftp server
+- name: Prepare tftp server
+  include_tasks: prepare_tftp_server.yml
+
+- name: Restart tftp server
+  service:
+    name: tftpd-hpa
+    state: restarted
+
+#- name: Check if source and destination file is the same
+#  block:
+#    - name: Get sha256 checksum of iso file
+#      stat:
+#        path: "/srv/iso/{{ ubuntu_live_server_iso_file }}"
+#        checksum_algorithm: sha256
+#      register: stat_result_iso
+#    - name: Get sha256 checksum of web server file
+#      stat:
+#        path: "/var/www/html/images/{{ ubuntu_live_server_iso_file }}"
+#        checksum_algorithm: sha256
+#      register: stat_result_web
+
+#- name: Copy new ISO img to webserver
+#  copy:
+#    src: "/srv/iso/{{ ubuntu_live_server_iso_file }}"
+#    dest: "/var/www/html/images/{{ ubuntu_live_server_iso_file }}"
+#    remote_src: true
+#  when: "stat_result_iso.stat.checksum != stat_result_web.stat.checksum"

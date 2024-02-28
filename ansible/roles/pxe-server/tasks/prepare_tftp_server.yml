@@ -1,6 +1,27 @@
 ---
+- name: Create directory for image files
+  file:
+    path: /srv/iso/
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
 
-- name: Create grub direcorty
+- name: Download Ubuntu ISO image
+  ansible.builtin.get_url:
+    url: "{{ ubuntu_url_image }}"
+    dest: "/srv/iso/{{ ubuntu_live_server_iso_file }}"
+    mode: '0440'
+
+- name: Create tftp directory for installation files
+  file:
+    path: "{{ tftp_dir_path }}"
+    state: directory
+    owner: nobody
+    group: nogroup
+    mode: '0777'
+
+- name: Create grub direcorties
   file:
     path: "{{ tftp_dir_path }}/{{ item }}"
     state: directory
@@ -10,11 +31,100 @@
   with_items:
     - grub
     - pxelinux.cfg
+#    - grub/x86_64-efi
+
+- name: Create directory for kernel files
+  file:
+    path: "{{ tftp_dir_path }}/casper"
+    state: directory
+    mode: 0755
+
+- name: Copy tftpd-hpa configuration file
+  template:
+    src: "templates/tftpd-hpa.j2"
+    dest: "/etc/default/tftpd-hpa"
+  notify: restart-tftpd
+
+- name: Extract kernel and ramdisk from LiveCD
+  community.general.iso_extract:
+    image: "/srv/iso/{{ ubuntu_live_server_iso_file }}"
+    dest: "{{ tftp_dir_path }}/casper"
+    files:
+    - casper/vmlinuz
+    - casper/initrd
+
+- name: Extract grub files from LiveCD
+  community.general.iso_extract:
+    image: "/srv/iso/{{ ubuntu_live_server_iso_file }}"
+    dest: "{{ tftp_dir_path }}/grub/"
+    files:
+    - boot/grub/fonts/unicode.pf2
 
 - name: Copy grub config file
   template:
-    src: "templates/grub.conf.j2"
+    src: "templates/grub.cfg.j2"
     dest: "{{ tftp_dir_path }}/grub/grub.cfg"
+
+- name: Download uefi files from Ubuntu mirror
+  block:
+    - name: Get grub efi file
+      ansible.builtin.get_url:
+        url: "http://mirrors.edge.kernel.org/ubuntu/pool/main/g/grub2-signed/grub-efi-amd64-signed_1.201%2B2.12-1ubuntu1_amd64.deb"
+        dest: /tmp/grub-efi-amd64-signed.deb
+    - name: Get grub boot file
+      ansible.builtin.get_url:
+        url: "http://mirrors.edge.kernel.org/ubuntu/pool/main/s/shim-signed/shim-signed_1.56%2B15.7-0ubuntu1_amd64.deb"
+        dest: /tmp/shim-signed_ubuntu_amd64.deb
+    - name: Unpack grub efi file
+      command: "dpkg -x /tmp/grub-efi-amd64-signed.deb /tmp/grub"
+    - name: Unpack grub boot file
+      command: "dpkg -x /tmp/shim-signed_ubuntu_amd64.deb /tmp/shim"
+    - name: Copy grub efi file
+      copy:
+        src: "/tmp/grub/usr/lib/grub/x86_64-efi-signed/grubnetx64.efi.signed"
+        dest: "{{ tftp_dir_path }}/grubx64.efi"
+        remote_src: true
+    - name: Copy grub boot file
+      copy:
+        src: "/tmp/shim/usr/lib/shim/shimx64.efi.signed.latest"
+        dest: "{{ tftp_dir_path }}/bootx64.efi"
+        remote_src: true
+
+- name: Copy pxelinux.0 file
+  copy:
+    src: /usr/lib/PXELINUX/pxelinux.0
+    dest: "{{ tftp_dir_path }}"
+    mode: '644'
+    remote_src: true
+
+- name: Copy syslinux efi and bios files
+  block:
+    - name: Copy syslinux efi files
+      copy:
+        src: "/usr/lib/syslinux/modules/efi64/{{ item }}"
+        dest: "{{ tftp_dir_path }}/{{ item }}"
+        remote_src: true
+      loop:
+        - ldlinux.e64
+#        - libutil.c32
+#        - menu.c32
+#        - vesamenu.c32
+    - copy:
+        src: "/usr/lib/SYSLINUX.EFI/efi64/{{ item }}"
+        dest: "{{ tftp_dir_path }}/{{ item }}"
+        remote_src: true
+      loop:
+        - syslinux.efi
+    - name: Copy syslinux bios file(s)
+      copy:
+        src: "/usr/lib/syslinux/modules/bios/{{ item }}"
+        dest: "{{ tftp_dir_path }}/{{ item }}"
+        remote_src: true
+      loop:
+        - ldlinux.c32
+        - libutil.c32
+        - menu.c32
+        - vesamenu.c32
 
 - name: Create autoinstall pxe config file per device
   include_tasks:

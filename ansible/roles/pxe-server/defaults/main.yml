@@ -13,7 +13,8 @@ pxeserver_packages:
   - shim
   - shim-signed
   - grub-common
+  - syslinux-efi
   - syslinux-common
   - pxelinux
 
-tftp_dir_path: /srv/tftp
+tftp_dir_path: /srv/tftpboot

@@ -40,7 +40,7 @@ autoinstall:
     layout: dk
     toggle: null
     variant: ''
-  locale: us_US.UTF-8
+  locale: en_US.UTF-8
   network:
     ethernets:
       enp0s25:
@@ -55,7 +55,7 @@ autoinstall:
   user-data:
     # Set TimeZone and Locale
     timezone: Europe/Copenhagen
-    locale: dk_DK.UTF-8
+    locale: us_US.UTF-8
     # cloud-init not managing hosts file. only hostname is added
     manage_etc_hosts: localhost
     users:
@@ -74,8 +74,6 @@ autoinstall:
   storage:
     config:
     - ptable: gpt
-      serial: ST1000LM024_HN-M101MBB_S2RQJ9CBC14109
-      wwn: '0x50004cf2069c3909'
       path: /dev/sda
       wipe: superblock-recursive
       preserve: false
