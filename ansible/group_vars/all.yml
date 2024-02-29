@@ -40,9 +40,9 @@ dns_server: '{{ dmz_network_if_ip }}'
 lan_dns_domain: mylabnet.dk
 dmz_dns_domain: minicluster.mylabnet.dk
 
-############################
-# restic backup role variables
-############################
+################################
+# restic backup role variables #
+################################
 # Deactivate clean service. Only enabled in one node
 restic_clean_service: false
 restic_backups_dirs:
@@ -54,3 +54,11 @@ restic_backups_dirs:
     exclude:
       - pattern: '.cache'
       - pattern: '.ansible'
+
+##########################
+# Security configuration #
+##########################
+security_lan_network_cidr: '{{ lan_network_cidr }}'
+security_dmz_network_cidr: '{{ dmz_network_cidr }}'
+security_ssh_allow_users: sysadmin
+security_ssh_port: '{{ ansible_ssh_port }}'
