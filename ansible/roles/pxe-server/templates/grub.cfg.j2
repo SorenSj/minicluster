@@ -29,7 +29,7 @@ set linux_gfx_mode=keep
 
 export linux_gfx_mode
 
-menuentry 'Install Ubuntu 22.04' {
+menuentry 'Install Ubuntu 22.04 - autoinstall' --id=auto {
         gfxmode $linux_gfx_mode
         linux casper/vmlinuz ip=dhcp boot=casper url=http://{{ kick_start_server }}/images/{{ ubuntu_live_server_iso_file }} autoinstall ds=nocloud-net\;s=http://{{ kick_start_server }}/ks/${net_default_mac}/ cloud-config-url=/dev/null
         initrd casper/initrd

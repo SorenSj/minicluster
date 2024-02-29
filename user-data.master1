@@ -7,11 +7,11 @@ autoinstall:
     mirror-selection:
       primary:
       - country-mirror
-      - arches:
+      - arches: &id001
         - amd64
         - i386
-        uri: http://archive.ubuntu.com/ubuntu
-      - arches:
+        uri: http://archive.ubuntu.com/ubuntu/
+      - arches: &id002
         - s390x
         - arm64
         - armhf
@@ -20,13 +20,18 @@ autoinstall:
         - riscv64
         uri: http://ports.ubuntu.com/ubuntu-ports
     preserve_sources_list: false
+    security:
+    - arches: *id001
+      uri: http://security.ubuntu.com/ubuntu/
+    - arches: *id002
+      uri: http://ports.ubuntu.com/ubuntu-ports
   codecs:
     install: false
   drivers:
     install: false
   identity:
     hostname: master1
-    password: $6$QS3J1wqGmYrGp.pf$GqOblsBLgam0642OcKv5gzNuzYC/extzlQ4.cpPfjKIqkRO7SFjbe67QtdZ9gfdUo98Z5m.FYdTEcKqcPQNEh.
+    password: $6$3L4b909vO.AAducF$hF9C0eTk7lv2f1JI5kNpS191CM0uUcVaMnVLfTOvf/VQJVoRjvHmyWENi7shdes/QblAmeBRA69Bm2SlE.npj.
     realname: System Administrator
     username: sysadmin
   kernel:
@@ -41,6 +46,8 @@ autoinstall:
       enp0s25:
         dhcp4: true
     version: 2
+  oem:
+    install: auto
   source:
     id: ubuntu-server
     search_drivers: false
@@ -54,124 +61,126 @@ autoinstall:
       serial: ST1000LM024_HN-M101MBB_S2RQJ9CBC14109
       wwn: '0x50004cf2069c3909'
       path: /dev/sda
-      wipe: superblock-recursive
+      wipe: superblock
       preserve: false
       name: ''
-      grub_device: true
-      type: disk
+      grub_device: false
       id: disk-sda
+      type: disk
     - device: disk-sda
-      size: 1048576
-      flag: bios_grub
+      size: 1127219200
+      wipe: superblock
+      flag: boot
       number: 1
       preserve: false
-      grub_device: false
+      grub_device: true
       offset: 1048576
       path: /dev/sda1
+      id: partition-2
       type: partition
-      id: partition-0
+    - fstype: fat32
+      volume: partition-2
+      preserve: false
+      id: format-2
+      type: format
     - device: disk-sda
       size: 2147483648
       wipe: superblock
       number: 2
       preserve: false
       grub_device: false
-      offset: 2097152
+      offset: 1128267776
       path: /dev/sda2
+      id: partition-3
       type: partition
-      id: partition-1
     - fstype: ext4
-      volume: partition-1
+      volume: partition-3
       preserve: false
+      id: format-3
       type: format
-      id: format-0
     - device: disk-sda
-      size: 998053511168
+      size: 53687091200
       wipe: superblock
       number: 3
       preserve: false
       grub_device: false
-      offset: 2149580800
+      offset: 3275751424
       path: /dev/sda3
+      id: partition-4
       type: partition
-      id: partition-2
-    - name: ubuntu-vg
-      devices:
-      - partition-2
-      preserve: false
-      type: lvm_volgroup
-      id: lvm_volgroup-0
-    - name: ubuntu-lv
-      volgroup: lvm_volgroup-0
-      size: 107374182400B
-      wipe: superblock
-      preserve: false
-      path: /dev/ubuntu-vg/ubuntu-lv
-      type: lvm_partition
-      id: lvm_partition-0
     - fstype: ext4
-      volume: lvm_partition-0
+      volume: partition-4
       preserve: false
-      type: format
-      id: format-1
-    - path: /
-      device: format-1
-      type: mount
-      id: mount-1
-    - path: /boot
-      device: format-0
-      type: mount
-      id: mount-0
-    - name: lv-varlib
-      volgroup: lvm_volgroup-0
-      size: 107374182400B
-      wipe: superblock
-      preserve: false
-      path: /dev/ubuntu-vg/lv-varlib
-      type: lvm_partition
-      id: lvm_partition-1
-    - fstype: ext4
-      volume: lvm_partition-1
-      preserve: false
-      type: format
-      id: format-2
-    - path: /var/lib
-      device: format-2
-      type: mount
-      id: mount-2
-    - name: lv-storage
-      volgroup: lvm_volgroup-0
-      size: 107374182400B
-      wipe: superblock
-      preserve: false
-      path: /dev/ubuntu-vg/lv-storage
-      type: lvm_partition
-      id: lvm_partition-2
-    - fstype: ext4
-      volume: lvm_partition-2
-      preserve: false
-      type: format
-      id: format-3
-    - path: /storage
-      device: format-3
-      type: mount
-      id: mount-3
-    - name: lv-srv
-      volgroup: lvm_volgroup-0
-      size: 675928866816B
-      wipe: superblock
-      preserve: false
-      path: /dev/ubuntu-vg/lv-srv
-      type: lvm_partition
-      id: lvm_partition-3
-    - fstype: ext4
-      volume: lvm_partition-3
-      preserve: false
-      type: format
       id: format-4
-    - path: /srv
+      type: format
+    - path: /
       device: format-4
-      type: mount
       id: mount-4
+      type: mount
+    - device: disk-sda
+      size: 214748364800
+      wipe: superblock
+      number: 4
+      preserve: false
+      grub_device: false
+      offset: 56962842624
+      path: /dev/sda4
+      id: partition-6
+      type: partition
+    - fstype: ext4
+      volume: partition-6
+      preserve: false
+      id: format-6
+      type: format
+    - path: /var
+      device: format-6
+      id: mount-6
+      type: mount
+    - device: disk-sda
+      size: 214748364800
+      wipe: superblock
+      number: 5
+      preserve: false
+      grub_device: false
+      offset: 271711207424
+      path: /dev/sda5
+      id: partition-7
+      type: partition
+    - fstype: ext4
+      volume: partition-7
+      preserve: false
+      id: format-7
+      type: format
+    - path: /storage
+      device: format-7
+      id: mount-7
+      type: mount
+    - device: disk-sda
+      size: 513743519744
+      wipe: superblock
+      number: 6
+      preserve: false
+      grub_device: false
+      offset: 486459572224
+      path: /dev/sda6
+      id: partition-8
+      type: partition
+    - fstype: ext4
+      volume: partition-8
+      preserve: false
+      id: format-8
+      type: format
+    - path: /srv
+      device: format-8
+      id: mount-8
+      type: mount
+    - path: /boot
+      device: format-3
+      id: mount-3
+      type: mount
+    - path: /boot/efi
+      device: format-2
+      id: mount-2
+      type: mount
   updates: security
   version: 1
