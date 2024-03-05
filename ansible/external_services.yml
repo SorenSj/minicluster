@@ -12,10 +12,17 @@
     # Include vault variables
     - name: Include vault variables
       include_vars: "vars/vault.yml"
-    # Include mycluster variables
-    - name: Include mycluster variables
-      include_vars: "vars/mycluster.yml"
+    # Include minicluster variables
+    - name: Include minicluster variables
+      include_vars: "vars/minicluster.yml"
 
+    - name: Create directory for ionos file
+      file:
+        path: "~/.secrets"
+        state: directory
+        owner: root
+        group: root
+        
     - name: Copy ionos secret file
       template:
         src: "{{ item.template }}"
@@ -94,9 +101,9 @@
     # Include vault variables
     - name: Include vault variables
       include_vars: "vars/vault.yml"
-    # Include mycluster variables
-    - name: Include mycluster variables
-      include_vars: "vars/mycluster.yml"
+    # Include minicluster variables
+    - name: Include minicluster variables
+      include_vars: "vars/minicluster.yml"
 
     - name: Load customCA-signed TLS certificate for minio
       set_fact:
@@ -149,9 +156,9 @@
     - name: Include vault variables
       include_vars: "vars/vault.yml"
 
-    # Include mycluster variables
-    - name: Include mycluster variables
-      include_vars: "vars/mycluster.yml"
+    # Include minicluster variables
+    - name: Include minicluster variables
+      include_vars: "vars/minicluster.yml"
 
     - name: Load customCA-signed TLS certificate for minio
       set_fact:
@@ -232,9 +239,9 @@
     - name: Include vault variables
       include_vars: "vars/vault.yml"
 
-    # Include mycluster variables
-    - name: Include mycluster variables
-      include_vars: "vars/mycluster.yml"
+    # Include minicluster variables
+    - name: Include minicluster variables
+      include_vars: "vars/minicluster.yml"
 
     # Install hashicorp vault collection dependencies (hvac python package) using PIP.
     - name: Ensure PIP is installed.

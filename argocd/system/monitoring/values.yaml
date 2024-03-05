@@ -17,14 +17,12 @@ ingress:
 k3sMetrics:
   enabled: true
   servers:
-    - ip: 10.0.0.11
-    - ip: 10.0.0.12
-    - ip: 10.0.0.13
-    - ip: 10.0.0.14
-    - ip: 10.0.0.15
-    - ip: 10.0.0.20
     - ip: 10.0.0.21
     - ip: 10.0.0.22
+    - ip: 10.0.0.31
+    - ip: 10.0.0.32
+    - ip: 10.0.0.33
+    - ip: 10.0.0.41
 
 # Monitoring of external services
 externalServices:

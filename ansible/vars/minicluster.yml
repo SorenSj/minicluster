@@ -9,7 +9,7 @@
 k3s_version: v1.26.12+k3s1
 
 # k3s master node VIP (loadbalancer)
-k3s_api_vip: 10.0.0.11
+k3s_api_vip: 10.0.0.21
 
 # k3s shared token
 k3s_token: "{{ vault.cluster.k3s.token }}"
@@ -25,20 +25,24 @@ k3s_kubelet_config: |
   shutdownGracePeriodCriticalPods: 10s
 
 
-# k3s server-config
+k3s_server_config:
 # Equivalent to start master installer with the following options
 # --write-kubeconfig-mode '0644'
 # --disable 'servicelb'
 # --disable 'traefik'
 # --disable 'local-storage'
- --node-taint 'node-role.kubernetes.io/master=true:NoSchedule'
- --kube-controller-manager-arg 'bind-address=0.0.0.0'
- --kube-proxy-arg 'metrics-bind-address=0.0.0.0'
- --kube-scheduler-arg 'bind-address=0.0.0.0'
- --kubelet-arg 'config=/etc/rancher/k3s/kubelet.config'
- --kube-controller-manager-arg 'terminated-pod-gc-threshold=10'
+  node-taint:
+    - 'node-role.kubernetes.io/master=true:NoSchedule'
+  kube-controller-manager-arg:
+    - 'bind-address=0.0.0.0'
+    - 'terminated-pod-gc-threshold=10'
+  kube-proxy-arg:
+    - 'metrics-bind-address=0.0.0.0'
+  kube-scheduler-arg:
+    - 'bind-address=0.0.0.0'
+  kubelet-arg:
+    - 'config=/etc/rancher/k3s/kubelet.config'
 
-k3s_server_config:
   tls-san:
     - "{{ k3s_api_vip }}"  # IP to HAProxy
   disable:
@@ -46,18 +50,7 @@ k3s_server_config:
     - servicelb
     - traefik
   write-kubeconfig-mode: 644
-  node-taint:
-    - 'node-role.kubernetes.io/master=true:NoSchedule'
   etcd-expose-metrics: true
-  kubelet-arg:
-    - 'config=/etc/rancher/k3s/kubelet.config'
-  kube-proxy-arg:
-    - 'metrics-bind-address=0.0.0.0'
-  kube-controller-manager-arg:
-    - 'bind-address=0.0.0.0'
-    - 'terminated-pod-gc-threshold=10'
-  kube-scheduler-arg:
-    - 'bind-address=0.0.0.0'
 
 # k3s agent-config
 # Equivalent to start agent installer with the following options
@@ -97,10 +90,10 @@ linkerd_dashboard_dns: "linkerd.{{ dmz_dns_domain }}"
 # Enable letsencrypt certificates
 enable_letsencrypt: true
 
-# IONOS API credentials
-ionos_public_prefix: "{{ vault.certmanager.ionos.public_prefix }}"
-ionos_secret: "{{ vault.certmanager.ionos.secret }}"
-ionos_api_endpoint: https://api.hosting.ionos.com
+# Cloudflare API credentials
+cloudflare_public_prefix: "{{ vault.certmanager.cloudflare.public_prefix }}"
+cloudflare_secret: "{{ vault.certmanager.cloudflare.secret }}"
+cloudflare_api_endpoint: https://api.cloudflare.com
 
 
 # issuer email
@@ -230,7 +223,7 @@ restic_environment:
 # Vault configuration
 #######################
 
-vault_hostname: "vault.minicluster.sysadmin.com"
+vault_hostname: "vault.minicluster.mylabnet.dk"
 vault_version: 1.15.4
 
 vault_dns: "{{ vault_hostname }}"

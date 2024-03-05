@@ -160,9 +160,9 @@ nft_forward_host_rules:
   230 http from lan:
     - iifname $lan_interface oifname $dmz_interface ip daddr $dmz_network tcp dport {http, https} ct state new accept
   242 haproxy from lan:
-    - iifname $lan_interface oifname $dmz_interface ip daddr 10.0.0.11 tcp dport 6443 ct state new accept
+    - iifname $lan_interface oifname $dmz_interface ip daddr 10.0.0.21 tcp dport 6443 ct state new accept
   250 port-forwarding from lan:
-    - iifname $lan_interface oifname $dmz_interface ip daddr 10.0.0.11 tcp dport 8080 ct state new accept
+    - iifname $lan_interface oifname $dmz_interface ip daddr 10.0.0.21 tcp dport 8080 ct state new accept
 # NAT Post-routing
 nft_nat_host_postrouting_rules:
   005 masquerade dmz to lan:

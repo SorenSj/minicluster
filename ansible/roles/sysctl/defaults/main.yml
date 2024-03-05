@@ -1,4 +1,0 @@
----
-# defaults file for sysctl
-
-disable_ping: false

@@ -52,24 +52,27 @@ vault:
   # Grafana
   grafana:
     admin:
-      user: admin
+      user: grafadmin
       password: Van&chai4
   # postgreSQL
   postgresql:
     admin:
-      user: admin
+      user: pgadmin
       password: Van&chai4
   # MySQL
   mysql:
     admin:
-      user: admin
+      user: sqladmin
       password: Van&chai4
     root:
       user: root
       password: 7sxvb3e9
+    user:
+      user: sqluser
+      password: TauMichaim3
 
   # Certmanager
   certmanager:
-    ionos:
-      public_prefix: your-public-prefix
-      secret: your-key
+    cloudflare:
+      public_prefix: cf
+      secret: s1cret0

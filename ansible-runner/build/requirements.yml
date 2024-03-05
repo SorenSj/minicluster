@@ -1,7 +1,5 @@
 ---
 roles:
-  - name: mrlesmithjr.netplan
-    version: v0.4.1
   - name: ricsanfre.firewall
     version: v1.0.0
   - name: ricsanfre.security
@@ -24,12 +22,6 @@ roles:
     version: v1.1.3
   - name: ricsanfre.vault
     version: v1.0.4
-#  - name: sorensj.firewall_dmz
-#    version: v1.0.0
-#  - name: sorensj.dnsmasq
-#    version: v1.0.0
-#  - name: sorensj.upgrade_apt
-#    version: v1.0.0
 collections:
   - name: community.general
     version: 8.0.1

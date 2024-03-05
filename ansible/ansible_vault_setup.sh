@@ -60,6 +60,3 @@ if [[ -f ".vault_password" ]]; then
     echo "Done. Please source your 'source ~/.bashrc' file to load the ANSIBLE_VAULT_PASSWORD_FILE environment variable."
     echo "Done."
 fi
-
-
-

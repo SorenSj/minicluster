@@ -14,6 +14,10 @@
     - role: basic_setup
       tags: [os]
   
+    # Firewall configuration
+    - role: ricsanfre.firewall
+      tags: [firewall]
+
     # Security Hardening
     - role: sorensj.security
       tags: [security]

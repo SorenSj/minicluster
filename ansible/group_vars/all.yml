@@ -2,7 +2,7 @@
 # Group all variables.
 
 # Remote user name
-ansible_connection: ssh 
+#ansible_connection: ssh 
 ansible_ssh_user: sysadmin
 ansible_ssh_pass: "Van&chai4"
 ansible_ssh_port: 22
@@ -60,5 +60,5 @@ restic_backups_dirs:
 ##########################
 security_lan_network_cidr: '{{ lan_network_cidr }}'
 security_dmz_network_cidr: '{{ dmz_network_cidr }}'
-security_ssh_allow_users: sysadmin
+security_ssh_allow_users: ""
 security_ssh_port: '{{ ansible_ssh_port }}'

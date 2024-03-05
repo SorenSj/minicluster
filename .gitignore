@@ -1,6 +1,5 @@
-/ansible/roles/ricsanfre.*
-/ansible/roles/sorensj.*
-/ansible/ansible_collections
+/ansible/roles/common
+/ansible/collections/ansible_collections
 /certbot
 /certificates
 /docs/_site

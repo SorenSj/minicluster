@@ -34,11 +34,11 @@ os-upgrade:
 
 .PHONY: gateway-setup
 gateway-setup:
-	${RUNNER} ansible-playbook setup_picluster.yml --tags "gateway"
+	${RUNNER} ansible-playbook setup_gateway.yml --tags "gateway"
 
 .PHONY: nodes-setup
 nodes-setup:
-	${RUNNER} ansible-playbook setup_picluster.yml --tags "node"
+	${RUNNER} ansible-playbook setup_minicluster.yml --tags "node"
 
 .PHONY: external-services
 external-services:
