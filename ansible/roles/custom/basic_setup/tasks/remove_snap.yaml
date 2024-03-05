@@ -1,0 +1,10 @@
+---
+- name: Remove Snap Packages
+  include_tasks: remove_snap_packages.yml
+
+- name: Remove snapd package
+  apt:
+    name: snapd
+    update_cache: true
+    autoremove: true
+    state: absent

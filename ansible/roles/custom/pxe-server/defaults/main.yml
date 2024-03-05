@@ -1,0 +1,20 @@
+---
+# ISO file
+ubuntu_live_server_iso_file: jammy-live-server-amd64.iso
+ubuntu_url_image: http://cdimage.ubuntu.com/ubuntu-server/jammy/daily-live/current/{{ubuntu_live_server_iso_file}}
+
+# Kick-start server (http server)
+apache_package_list:
+  - apache2
+kick_start_server: 10.0.0.1
+ks_http_conf: ks-server.conf
+
+pxeserver_packages:
+  - shim
+  - shim-signed
+  - grub-common
+  - syslinux-efi
+  - syslinux-common
+  - pxelinux
+
+tftp_dir_path: /srv/tftpboot
