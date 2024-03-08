@@ -58,7 +58,7 @@ autoinstall:
   user-data:
     # Set TimeZone and Locale
     timezone: Europe/Copenhagen
-    locale: dk_DK.UTF-8
+    locale: en_US.UTF-8
     # cloud-init not managing hosts file. only hostname is added
     manage_etc_hosts: localhost
     users:

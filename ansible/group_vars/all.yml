@@ -60,5 +60,15 @@ restic_backups_dirs:
 ##########################
 security_lan_network_cidr: '{{ lan_network_cidr }}'
 security_dmz_network_cidr: '{{ dmz_network_cidr }}'
-security_ssh_allow_users: ""
+security_ssh_allow_users: null
 security_ssh_port: '{{ ansible_ssh_port }}'
+
+#############################
+# Certmanager configuration #
+#############################
+certbot_dns_provider: cloudflare
+
+cloudflare_email: admin@mylabnet.dk
+cloudflare_api_key: "{{ vault.certmanager.cloudflare.cloudflare_api_key }}"
+cloudflare_api_token: "{{ vault.certmanager.cloudflare.cloudflare_api_token }}"
+cloudflare_api_ca_key: "{{ vault.certmanager.cloudflare.cloudflare_api_ca_key }}"
