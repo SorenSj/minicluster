@@ -15,31 +15,13 @@
     # Include minicluster variables
     - name: Include minicluster variables
       include_vars: "vars/minicluster.yml"
-
-    - name: Create directory for ionos file
-      file:
-        path: "~/.secrets"
-        state: directory
-        owner: root
-        group: root
-        
-    - name: Copy ionos secret file
-      template:
-        src: "{{ item.template }}"
-        dest: "{{ item.dest }}"
-        mode: 0600
-      with_items:
-        - template: ionos-credentials.ini.j2
-          dest: "~/.secrets/ionos-credentials.ini"
-      when: enable_letsencrypt
-
   tasks:
-    - name: Create Letsencrytp certificate for external services
+    - name: Create Letsencrypt certificate for external services
       command: |
         certbot certonly \
-        --authenticator dns-ionos \
-        --dns-ionos-credentials ~/.secrets/ionos-credentials.ini \
-        --dns-ionos-propagation-seconds {{ propagation_seconds }} \
+        --authenticator dns-{{ certbot_dns_provider }} \
+        --dns-{{ certbot_dns_provider }}-credentials ~/.secrets/{{ certbot_dns_provider }}-credentials.ini \
+        --dns-{{ certbot_dns_provider }}-propagation-seconds {{ propagation_seconds }} \
         --server https://acme-v02.api.letsencrypt.org/directory \
         --agree-tos \
         --non-interactive \
