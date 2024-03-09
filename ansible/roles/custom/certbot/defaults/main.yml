@@ -16,7 +16,12 @@ dns_ionos_secret: ionos-secret
 dns_ionos_api_endpoint: https://api.hosting.ionos.com
 
 # dns cloudflare credentials
-dns_cloudflare_prefix: cloudflare-prefix
+cloudflare_email: admin@example.com
+cloudflare_api_key: ""
+cloudflare_api_token: ""
+cloudflare_api_ca_key: ""
+
+
 dns_cloudflare_secret: cloudflare-secret
 
 certbot_email: admin@mylabnet.dk
