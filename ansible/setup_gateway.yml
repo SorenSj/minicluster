@@ -15,8 +15,8 @@
       tags: [os]
   
     # Security Hardening
-    - role: sorensj.security
-      tags: [security]
+#    - role: sorensj.security
+#      tags: [security]
 
     # DNS/DHCP server configuration
     - role: sorensj.dnsmasq
@@ -42,10 +42,6 @@
     - role: pxe-server
       tags: [pxe]
 
-    # Enhanced gpg configuration
-    - role: gpg
-      tags: [gpg]
-  
   tasks:
     # Aditional Tasks in case alternative architecture (centralized SAN)
     - name: Centralized SAN

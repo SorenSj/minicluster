@@ -9,7 +9,7 @@
   become: true
   when: install_python_packages
 
-- name: "Install certbot and {{ certbot_dns_provider }} dns provider plugin in venvironment"
+- name: "Install certbot and {{ certbot_dns_provider }} plugin in virtual environment"
   pip:
     name:
       - certbot

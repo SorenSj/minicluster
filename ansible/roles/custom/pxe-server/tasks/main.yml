@@ -30,22 +30,22 @@
     name: tftpd-hpa
     state: restarted
 
-#- name: Check if source and destination file is the same
-#  block:
-#    - name: Get sha256 checksum of iso file
-#      stat:
-#        path: "/srv/iso/{{ ubuntu_live_server_iso_file }}"
-#        checksum_algorithm: sha256
-#      register: stat_result_iso
-#    - name: Get sha256 checksum of web server file
-#      stat:
-#        path: "/var/www/html/images/{{ ubuntu_live_server_iso_file }}"
-#        checksum_algorithm: sha256
-#      register: stat_result_web
+- name: Check if source and destination file is the same
+  block:
+    - name: Get sha256 checksum of iso file
+      stat:
+        path: "/srv/iso/{{ ubuntu_live_server_iso_file }}"
+        checksum_algorithm: sha256
+      register: stat_result_iso
+    - name: Get sha256 checksum of web server file
+      stat:
+        path: "/var/www/html/images/{{ ubuntu_live_server_iso_file }}"
+        checksum_algorithm: sha256
+      register: stat_result_web
 
-#- name: Copy new ISO img to webserver
-#  copy:
-#    src: "/srv/iso/{{ ubuntu_live_server_iso_file }}"
-#    dest: "/var/www/html/images/{{ ubuntu_live_server_iso_file }}"
-#    remote_src: true
-#  when: "stat_result_iso.stat.checksum != stat_result_web.stat.checksum"
+- name: Copy new ISO img to webserver
+  copy:
+    src: "/srv/iso/{{ ubuntu_live_server_iso_file }}"
+    dest: "/var/www/html/images/{{ ubuntu_live_server_iso_file }}"
+    remote_src: true
+  when: "stat_result_iso.stat.checksum != stat_result_web.stat.checksum"

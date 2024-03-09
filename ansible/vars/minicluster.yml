@@ -95,9 +95,8 @@ cloudflare_public_prefix: "{{ vault.certmanager.cloudflare.public_prefix }}"
 cloudflare_secret: "{{ vault.certmanager.cloudflare.secret }}"
 cloudflare_api_endpoint: https://api.cloudflare.com
 
-
 # issuer email
-acme_issuer_email: sysadmin@mylabnet.dk
+acme_issuer_email: admin@mylabnet.dk
 
 ##########################
 # Minio S3 configuration #
