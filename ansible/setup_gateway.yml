@@ -27,10 +27,6 @@
       tags: [dns]
 
     # Firewall (nftables) configuration
-#    - role: sorensj.firewall_dmz
-#      tags: [firewall]
-
-    # Firewall (nftables) configuration
     - role: ricsanfre.firewall
       tags: [firewall]
 
