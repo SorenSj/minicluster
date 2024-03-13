@@ -29,4 +29,3 @@
     # Certbot configuration
     - role: certbot
       tags: [certbot]
-

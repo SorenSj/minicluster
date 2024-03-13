@@ -6,8 +6,9 @@
   gather_facts: true
   tags: [certificates]
   vars:
-    propagation_seconds: 300
     selfsigned_certificates_path: "../certificates"
+    certbot_dns_provider_plugin: python3-certbot-dns-cloudflare
+
   pre_tasks:
     # Include vault variables
     - name: Include vault variables
@@ -15,19 +16,50 @@
     # Include minicluster variables
     - name: Include minicluster variables
       include_vars: "vars/minicluster.yml"
+
+    - name: Ensure python libraries are installed.
+      apt:
+        name:
+          - python3-pip
+          - python3-venv
+          - python3-certbot
+          - python3-acme
+        state: present
+      become: true
+      when: enable_letsencrypt
+
+    - name: "Install certbot and {{ certbot_dns_provider }} plugin"
+      package:
+        name:
+          - certbot
+          - "{{ certbot_dns_provider_plugin }}"
+        state: present
+      become: true
+      when: enable_letsencrypt
+
+#    - name: "Copy {{ certbot_dns_provider }} secret file"
+#      template:
+#        src: "{{ item.template }}"
+#        dest: "{{ item.dest }}"
+#        mode: 0600
+#      with_items:
+#        - template: "{{ certbot_dns_provider }}-credentials.ini.j2"
+#          dest: "~/.secrets/{{ certbot_dns_provider }}-credentials.ini"
+#      when: enable_letsencrypt
+
   tasks:
     - name: Create Letsencrypt certificate for external services
       command: |
         certbot certonly \
-        --authenticator dns-{{ certbot_dns_provider }} \
+        --dns-{{ certbot_dns_provider }} \
         --dns-{{ certbot_dns_provider }}-credentials ~/.secrets/{{ certbot_dns_provider }}-credentials.ini \
-        --dns-{{ certbot_dns_provider }}-propagation-seconds {{ propagation_seconds }} \
-        --server https://acme-v02.api.letsencrypt.org/directory \
+        --dns-cloudflare-propagation-seconds 60
         --agree-tos \
         --non-interactive \
         --rsa-key-size 4096 \
         -m {{ acme_issuer_email }} \
-        -d {{ item }}
+        -d {{ item }} \
+        --preferred-challenges dns-01
       register: certbot_create
       changed_when:
         - certbot_create.rc==0
@@ -72,7 +104,7 @@
 ## Install Minio S3 Storage Server
 
 - name: Install Minio S3 Storage Server
-  hosts: s3
+  hosts: tools1
   gather_facts: true
   tags: [s3]
   become: true

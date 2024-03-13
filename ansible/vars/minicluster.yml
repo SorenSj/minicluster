@@ -103,7 +103,7 @@ acme_issuer_email: admin@mylabnet.dk
 ##########################
 
 # Minio S3 Server
-minio_hostname: "s3.minicluster.mylabnet.dk"
+minio_hostname: "s3.mylabnet.dk"
 minio_endpoint: "{{ minio_hostname }}:9091"
 minio_url: "https://{{ minio_hostname }}:9091"
 
@@ -222,7 +222,7 @@ restic_environment:
 # Vault configuration
 #######################
 
-vault_hostname: "vault.minicluster.mylabnet.dk"
+vault_hostname: "vault.mylabnet.dk"
 vault_version: 1.15.4
 
 vault_dns: "{{ vault_hostname }}"

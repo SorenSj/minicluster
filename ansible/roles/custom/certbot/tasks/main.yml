@@ -1,16 +1,18 @@
 ---
 
-- name: Ensure python virtualenv is installed.
-  package:
+- name: Ensure python libraries are installed.
+  apt:
     name:
       - python3-pip
       - python3-venv
+      - python3-certbot
+      - python3-acme
     state: present
   become: true
   when: install_python_packages
 
 - name: "Install certbot and {{ certbot_dns_provider }} plugin in virtual environment"
-  pip:
+  pakage:
     name:
       - certbot
       - "{{ certbot_dns_provider_plugin }}"

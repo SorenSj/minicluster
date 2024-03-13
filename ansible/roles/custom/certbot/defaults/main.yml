@@ -21,10 +21,7 @@ cloudflare_api_key: ""
 cloudflare_api_token: ""
 cloudflare_api_ca_key: ""
 
-
-dns_cloudflare_secret: cloudflare-secret
-
-certbot_email: admin@mylabnet.dk
+certbot_email: admin@example.com
 
 # dns propagation in seconds
-propagation_seconds: 300
+propagation_seconds: 60
