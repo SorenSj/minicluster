@@ -1,0 +1,22 @@
+---
+
+acme_certificate_email: admin@mylabnet.dk
+acme_certificate_cf_account_token: "{{ vault.certmanager.cloudflare.cloudflare_api_token }}"
+
+certificate_remaining_days: 10
+certificate_files_mode: 0644
+
+key_size: 4096
+
+copy_csr_full_path: ""
+copy_crt_full_path: ""
+copy_key_full_path: ""
+copy_intermediate_full_path: ""
+copy_fullchain_full_path: ""
+
+letsencrypt_email: "admin@mylabnet.dk"
+letsencrypt_key_size: 4096
+letsencrypt_production: yes
+
+include_intermediate: no
+cleanup_all: no

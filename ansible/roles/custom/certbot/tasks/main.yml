@@ -12,7 +12,7 @@
   when: install_python_packages
 
 - name: "Install certbot and {{ certbot_dns_provider }} plugin in virtual environment"
-  pakage:
+  package:
     name:
       - certbot
       - "{{ certbot_dns_provider_plugin }}"

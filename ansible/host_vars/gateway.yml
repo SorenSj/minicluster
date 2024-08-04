@@ -15,11 +15,11 @@ dnsmasq_upstream_dns_servers:
   - '{{ global_dns1 }}'
   - '{{ global_dns2 }}'
 dnsmasq_dhcp_range: '10.0.0.100,10.0.0.149'
-#dnsmasq_additional_dhcp_hosts:
-#  ethernet_dhcp:
-#    desc: "PiHole server"
-#    mac: 
-#    ip: 10.0.0.91
+dnsmasq_additional_dhcp_hosts:
+  wifi_dhcp:
+    desc: "Airport Time Capsule"
+    mac: c4:b3:01:da:6b:05
+    ip: 10.0.1.154
 dnsmasq_additional_dns_hosts:
   ntp_server:
     desc: "NTP Server"
@@ -36,7 +36,7 @@ dnsmasq_additional_dns_hosts:
   elasticsearch:
     desc: "Elasticsearch server"
     hostname: elasticsearch
-    ip: 10.0.0.90
+    ip: 10.0.0.42
   grafana:
     desc: "Monitor server"
     hostname: monitoring
@@ -66,7 +66,7 @@ dnsmasq_additional_dns_hosts:
   vault_server:
     desc: "Vault server"
     hostname: vault
-    ip: '{{ dmz_network_if_ip }}'
+    ip: 10.0.0.1
 dnsmasq_enable_tftp: true
 dnsmasq_tftp_root: '{{ tftp_dir_path }}'
 dnsmasq_additional_conf: |-
@@ -95,8 +95,8 @@ ntp_allow_hosts: [10.0.0.0/24]
 # tcp 8200, 8201 Vault server
 # udp 69, TFTP server
 # TCP 6443 load balancer K3S API
-in_tcp_port: '{ ssh, https, http, icmp, iscsi-target, 9100, 8200, 8201, 6443 }'
-in_udp_port: '{ snmp, domain, ntp, bootps, 69, icmp }'
+in_tcp_port: '{ ssh, https, http, iscsi-target, 9100, 8200, 8201, 6443 }'
+in_udp_port: '{ snmp, domain, ntp, bootps, 69 }'
 # tcp 9091 minio server
 forward_tcp_port: '{ http, https, ssh, 9091 }'
 forward_udp_port: '{ domain, ntp }'
@@ -144,7 +144,11 @@ nft_output_host_rules:
     - type filter hook output priority 0;
   005 global: []
   015 localhost: []
-  050 icmp: []
+  050 icmp:
+    - meta nfproto ipv4 icmp type { echo-request } counter accept
+    - meta nfproto ipv6 icmpv6 type { echo-request } counter accept
+    - meta nfproto ipv6 icmpv6 type { nd-neighbor-advert, nd-neighbor-solicit, nd-router-advert } ip6 hoplimit 1 accept
+    - meta nfproto ipv6 icmpv6 type { nd-neighbor-advert, nd-neighbor-solicit, nd-router-advert} ip6 hoplimit 255 counter accept
   200 output udp accepted: []
   210 output tcp accepted: []
   250 reset-ssh: []
@@ -168,12 +172,17 @@ nft_nat_host_postrouting_rules:
   005 masquerade dmz to lan:
     - ip saddr $dmz_network oifname $lan_interface masquerade
 
-############################
-# restic backup role variables
-############################
+################################
+# restic backup role variables #
+################################
 restic_clean_service: true
 
 ########################
 # PXE server variables #
 ########################
 kick_start_server: '{{ dmz_network_if_ip }}'
+
+##########################
+# Vault server variables #
+##########################
+vault_version: 1.15.6

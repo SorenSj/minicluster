@@ -27,5 +27,5 @@
       tags: [ntp]
 
     # Certbot configuration
-    - role: certbot
-      tags: [certbot]
+#    - role: certbot
+#      tags: [certbot]

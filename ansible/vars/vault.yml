@@ -77,7 +77,7 @@ vault:
       public_prefix: ionos
       secret: s1cret0
     cloudflare:
-      cloudflare_email: admin@mylabnet.dk
+      cloudflare_email: soren.sjostrom@hotmail.com
       cloudflare_api_key: af024166867ee8310d1c7849d0a49877e2cb2
       cloudflare_api_token: uNBm_X0JwpNpL1ykNC7Gyr-SIJqjFYOBidnPCQjN
       cloudflare_api_ca_key: v1.0-bb006379a506c6a36f0a193f-d91578138093d839a2bc01c7bbce59b85f787ec8daed259d42ffd809c3af5310b31da7632362e5c8402f6fe92298f1922cd486c814b4fd26ce32d7bde60b5419cfb9b7d3c4a256fabf

@@ -1,14 +1,12 @@
 ---
 ## Generate TLS certificates for external services
 ## Generated using certbot (letsencrypt) or selfsigned certificates
-- name: Generate external services certificates
+- name: "Generate external services certificates for {{ minio_hostname }}"
   hosts: localhost
   gather_facts: true
   tags: [certificates]
   vars:
-    selfsigned_certificates_path: "../certificates"
-    certbot_dns_provider_plugin: python3-certbot-dns-cloudflare
-
+    certificate_common_name: "{{ minio_hostname }}"
   pre_tasks:
     # Include vault variables
     - name: Include vault variables
@@ -16,91 +14,69 @@
     # Include minicluster variables
     - name: Include minicluster variables
       include_vars: "vars/minicluster.yml"
-
-    - name: Ensure python libraries are installed.
-      apt:
-        name:
-          - python3-pip
-          - python3-venv
-          - python3-certbot
-          - python3-acme
-        state: present
-      become: true
-      when: enable_letsencrypt
-
-    - name: "Install certbot and {{ certbot_dns_provider }} plugin"
-      package:
-        name:
-          - certbot
-          - "{{ certbot_dns_provider_plugin }}"
-        state: present
-      become: true
-      when: enable_letsencrypt
-
-#    - name: "Copy {{ certbot_dns_provider }} secret file"
-#      template:
-#        src: "{{ item.template }}"
-#        dest: "{{ item.dest }}"
-#        mode: 0600
-#      with_items:
-#        - template: "{{ certbot_dns_provider }}-credentials.ini.j2"
-#          dest: "~/.secrets/{{ certbot_dns_provider }}-credentials.ini"
-#      when: enable_letsencrypt
-
-  tasks:
-    - name: Create Letsencrypt certificate for external services
-      command: |
-        certbot certonly \
-        --dns-{{ certbot_dns_provider }} \
-        --dns-{{ certbot_dns_provider }}-credentials ~/.secrets/{{ certbot_dns_provider }}-credentials.ini \
-        --dns-cloudflare-propagation-seconds 60
-        --agree-tos \
-        --non-interactive \
-        --rsa-key-size 4096 \
-        -m {{ acme_issuer_email }} \
-        -d {{ item }} \
-        --preferred-challenges dns-01
+    - name: Include Letsencrypt variables
+      include_vars: "vars/letsencrypt.yml"
+  roles:
+    - role: bendews.letsencrypt-cloudflare
       register: certbot_create
-      changed_when:
-        - certbot_create.rc==0
-        - '"Certificate not yet due for renewal; no action taken." not in certbot_create.stdout'
       when: enable_letsencrypt
-      with_items:
+
+- name: "Generate external services certificates for {{ vault_hostname }}"
+  hosts: localhost
+  gather_facts: true
+  tags: [certificates]
+  vars:
+    certificate_common_name: "{{ vault_hostname }}"
+  pre_tasks:
+    # Include vault variables
+    - name: Include vault variables
+      include_vars: "vars/vault.yml"
+    # Include minicluster variables
+    - name: Include minicluster variables
+      include_vars: "vars/minicluster.yml"
+    - name: Include Letsencrypt variables
+      include_vars: "vars/letsencrypt.yml"
+  roles:
+    - role: bendews.letsencrypt-cloudflare
+      register: certbot_create
+      when: enable_letsencrypt
+
+- name: Create customCA-signed TLS certificate for minio
+  hosts: localhost
+  gather_facts: true
+  tags: [certificates]
+  vars:
+    selfsigned_certificates_path: "../certificates"
+  tasks:
+    # Generate self-signed certificates directory
+    - name: Create certificates directory
+      file:
+        path: "{{ selfsigned_certificates_path }}"
+        state: directory
+        mode: 0750
+    # Include selfsigned certificates variables
+    - name: Include selfsigned certificates variables
+      include_vars: "vars/selfsigned-certificates.yml"
+    # Generate custom CA
+    - name: Generate custom CA
+      include_tasks: tasks/generate_custom_ca.yml
+      args:
+        apply:
+          delegate_to: localhost
+          become: false
+    # Generate selfsigned TLS certificate
+    - name: Generate customCA-signed SSL certificates
+      include_tasks: tasks/generate_ca_signed_cert.yml
+      args:
+        apply:
+          delegate_to: localhost
+          become: false
+      loop:
         - "{{ minio_hostname }}"
         - "{{ vault_hostname }}"
-
-    - name: Create customCA-signed TLS certificate for minio
-      when: not enable_letsencrypt
-      block:
-        # Generate self-signed certificates directory
-        - name: Create certificates directory
-          file:
-            path: "{{ selfsigned_certificates_path }}"
-            state: directory
-            mode: 0750
-        # Include selfsigned certificates variables
-        - name: Include selfsigned certificates variables
-          include_vars: "vars/selfsigned-certificates.yml"
-        # Generate custom CA
-        - name: Generate custom CA
-          include_tasks: tasks/generate_custom_ca.yml
-          args:
-            apply:
-              delegate_to: localhost
-              become: false
-        # Generate selfsigned TLS certificate
-        - name: Generate customCA-signed SSL certificates
-          include_tasks: tasks/generate_ca_signed_cert.yml
-          args:
-            apply:
-              delegate_to: localhost
-              become: false
-          loop:
-            - "{{ minio_hostname }}"
-            - "{{ vault_hostname }}"
-          loop_control:
-            loop_var: server_hostname
-
+      loop_control:
+        loop_var: server_hostname
+ 
 ## Install Minio S3 Storage Server
 
 - name: Install Minio S3 Storage Server
@@ -127,29 +103,22 @@
 
     - name: Get letsencrypt TLS certificate for minio
       block:
-        - name: check TLS certificate for minio exits
-          command: "certbot certificates -d {{ minio_hostname }}"
-          register: certbot_certificates
-          delegate_to: localhost
-          become: false
-          changed_when: false
-          failed_when:
-            - '"Certificate Name: " + minio_hostname not in certbot_certificates.stdout'
-        - name: Get certificate and key paths for minio
-          set_fact:
-            cert_path: "{{ certbot_certificates.stdout | regex_search(regexp1,'\\1') }}"
-            cert_key_path: "{{ certbot_certificates.stdout | regex_search(regexp2,'\\1') }}"
-          vars:
-            regexp1: 'Certificate Path: (\S+)'
-            regexp2: 'Private Key Path: (\S+)'
-          when:
-            - certbot_certificates.rc==0
-            - '"Certificate Name: " + minio_hostname in certbot_certificates.stdout'
-
+        - name: Get letsencrypt crt file
+          ansible.builtin.copy:
+            src: "/etc/ssl/{{ minio_hostname }}/{{ minio_hostname }}.crt"
+            dest: "/etc/ssl/{{ minio_hostname }}/"
+            owner: root
+            group: root
+        - name: Get letsencrypt key file
+          ansible.builtin.copy:
+            src: "/etc/ssl/{{ minio_hostname }}/{{ minio_hostname }}.key"
+            dest: "/etc/ssl/{{ minio_hostname }}/"
+            owner: root
+            group: root
         - name: Load tls key and cert
           set_fact:
-            minio_key: "{{ lookup('file', cert_key_path[0] ) }}"
-            minio_cert: "{{ lookup('file', cert_path[0] ) }}"
+            minio_key: "{{ lookup('file', '/etc/ssl/{{ minio_hostname }}/{{ minio_hostname }}.key' ) }}"
+            minio_cert: "{{ lookup('file', '/etc/ssl/{{ minio_hostname }}/{{ minio_hostname }}.crt' ) }}"
       when: enable_letsencrypt
   roles:
     - role: ricsanfre.minio
@@ -174,38 +143,31 @@
     - name: Include minicluster variables
       include_vars: "vars/minicluster.yml"
 
-    - name: Load customCA-signed TLS certificate for minio
+    - name: Load customCA-signed TLS certificate for Vault server
       set_fact:
         vault_key: "{{ lookup('file',selfsigned_certificates_path + '/' + server_hostname + '.key') }}"
         vault_cert: "{{ lookup('file',selfsigned_certificates_path + '/' + server_hostname + '.pem') }}"
         vault_ca: "{{ lookup('file',selfsigned_certificates_path + '/CA.pem') }}"
       when: not enable_letsencrypt
 
-    - name: Get letsencrypt TLS certificate for vault
+    - name: Get letsencrypt TLS certificate for Vault server
       block:
-        - name: check TLS certificate for vault exits
-          command: "certbot certificates -d {{ vault_hostname }}"
-          register: certbot_certificates
-          delegate_to: localhost
-          become: false
-          changed_when: false
-          failed_when:
-            - '"Certificate Name: " + vault_hostname not in certbot_certificates.stdout'
-        - name: Get certificate and key paths for minio
-          set_fact:
-            cert_path: "{{ certbot_certificates.stdout | regex_search(regexp1,'\\1') }}"
-            cert_key_path: "{{ certbot_certificates.stdout | regex_search(regexp2,'\\1') }}"
-          vars:
-            regexp1: 'Certificate Path: (\S+)'
-            regexp2: 'Private Key Path: (\S+)'
-          when:
-            - certbot_certificates.rc==0
-            - '"Certificate Name: " + vault_hostname in certbot_certificates.stdout'
-
+        - name: Get letsencrypt crt file
+          ansible.builtin.copy:
+            src: "/etc/ssl/{{ vault_hostname }}/{{ vault_hostname }}.crt"
+            dest: "/etc/vault/tls/vault.crt"
+            owner: vault
+            group: vault
+        - name: Get letsencrypt key file
+          ansible.builtin.copy:
+            src: "/etc/ssl/{{ vault_hostname }}/{{ vault_hostname }}.key"
+            dest: "/etc/vault/tls/vault.key"
+            owner: vault
+            group: vault
         - name: Load tls key and cert
           set_fact:
-            vault_key: "{{ lookup('file', cert_key_path[0] ) }}"
-            vault_cert: "{{ lookup('file', cert_path[0] ) }}"
+            vault_key: "/etc/vault/tls/vault.key"
+            vault_cert: "/etc/vault/tls/vault.crt"
       when: enable_letsencrypt
   roles:
     - role: ricsanfre.vault

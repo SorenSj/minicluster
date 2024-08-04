@@ -4,10 +4,10 @@ all:
     control:
       hosts:
         gateway:
-          hostname: pigate
-          ansible_host: 192.168.1.10 
+          hostname: minigate
+          ansible_host: 10.0.1.1
           ip: 192.168.1.10
-          mac: dc:a6:32:13:6f:12
+          mac: 94:c6:91:1d:72:53
         devmaster:
           hostname: devmaster
           ansible_host: localhost
@@ -15,46 +15,43 @@ all:
     external:
       hosts:
         storage:
-          tools2:
-            hostname: tools2
-            ansible_host: 192.168.1.12
-            ip: 192.168.1.12
-            mac: c0:3f:d5:6c:e8:9d
     minicluster:
       hosts:
         master1:
           hostname: master1
-          ansible_host: 10.0.0.21
-          ip: 10.0.0.21
+          ansible_host: 10.0.1.21
+          ip: 10.0.1.21
           mac: b8:ae:ed:71:f2:20
         master2:
           hostname: master2
-          ansible_host: 10.0.0.22
-          ip: 10.0.0.22
+          ansible_host: 10.0.1.22
+          ip: 10.0.1.22
           mac: 94:c6:91:14:9a:f7
         node1:
           hostname: node1
-          ansible_host: 10.0.0.31
-          ip: 10.0.0.31
+          ansible_host: 10.0.2.31
+          ip: 10.0.2.31
           mac: 80:ee:73:fa:f4:36
         node2:
           hostname: node2
-          ansible_host: 10.0.0.32
-          ip: 10.0.0.32
+          ansible_host: 10.0.2.32
+          ip: 10.0.2.32
           mac: 80:ee:73:fa:f4:33
         node3:
           hostname: node3
-          ansible_host: 10.0.0.33
-          ip: 10.0.0.33
+          ansible_host: 10.0.2.33
+          ip: 10.0.2.33
           mac: 80:ee:73:fa:f4:1d
         tools1:
           hostname: tools1
-          ansible_host: 10.0.0.41
-          ip: 10.0.0.41
+          ansible_host: 10.0.2.41
+          ip: 10.0.2.41
           mac: 94:c6:91:ad:2f:61
-    raspberrypi:
-      hosts:
-        gateway:
+#        tools2:
+#          hostname: tools2
+#          ansible_host: 10.0.2.42
+#          ip: 10.0.2.42
+#          mac: c0:3f:d5:6c:e8:9d
     x86:
       hosts:
         master[1:2]:

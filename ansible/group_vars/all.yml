@@ -21,14 +21,22 @@ centralized_san: false
 #########################
 # Network configuration #
 #########################
-lan_port: wlan0
-lan_gw_ip: 192.168.1.254
-lan_network_cidr: 192.168.1.0/24
-lan_network_if_ip: 192.168.1.10
-dmz_port: eth0
-dmz_network_cidr: 10.0.0.0/24
-dmz_network_if_ip: 10.0.0.1
+wan_port: enp3s0
+wan_gw_ip: 192.168.1.254
+wan_network_cidr: 192.168.1.0/24
+wan_network_if_ip: 192.168.1.10
+lan_port: enx00e04c364372
+lan_gw_ip: 10.0.1.1
+lan_network_cidr: 10.0.1.0/24
+lan_network_if_ip: 10.0.1.1
+dmz_port: enx00e04c680063
+dmz_gw_ip: 10.0.2.1
+dmz_network_cidr: 10.0.2.0/24
+dmz_network_if_ip: 10.0.2.1
 wifi_port: wlan0
+wifi_gw_ip: 10.0.3.1
+wifi_network_cidr: 10.0.3.0/24
+wifi_network_if_ip: 10.0.3.1
 global_dns1: 108.162.195.90
 global_dns2: 162.159.38.251
 
@@ -36,9 +44,10 @@ global_dns2: 162.159.38.251
 # DNS configuration #
 #####################
 # DNS server
-dns_server: '{{ dmz_network_if_ip }}'
-lan_dns_domain: mylabnet.dk
-dmz_dns_domain: minicluster.mylabnet.dk
+wan_dns_domain: mylabnet.dk
+lan_dns_domain: lan.mylabnet.dk
+dmz_dns_domain: dmz.mylabnet.dk
+wifi_dns_domain: wifi.mylabnet.dk
 
 ################################
 # restic backup role variables #
@@ -68,7 +77,8 @@ security_ssh_port: '{{ ansible_ssh_port }}'
 #############################
 certbot_dns_provider: cloudflare
 
-cloudflare_email: admin@mylabnet.dk
+cloudflare_email: soren.sjostrom@hotmail.com
 cloudflare_api_key: "{{ vault.certmanager.cloudflare.cloudflare_api_key }}"
 cloudflare_api_token: "{{ vault.certmanager.cloudflare.cloudflare_api_token }}"
 cloudflare_api_ca_key: "{{ vault.certmanager.cloudflare.cloudflare_api_ca_key }}"
+cloudflare_domain: "mylabnet.dk"

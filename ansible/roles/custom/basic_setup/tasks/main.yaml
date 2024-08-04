@@ -5,26 +5,17 @@
   package_facts:
     manager: auto
 
-- name: Check whether snap is package is installed
-  debug:
-    msg: "snapd found"
-  when: 
-    - "'snapd' in ansible_facts.packages"
-    - "'raspberrypi' in group_names"
-
-- name: Remove snap package
-  include_tasks: remove_snap.yaml
-  when: 
-    - "'snapd' in ansible_facts.packages" 
-    - "'raspberrypi' in group_names"
-
-- name: Execute x86 specific setup tasks
-  include_tasks: x86_tasks.yml
-  when: "'x86' in group_names"
-
-- name: Execute RaspberryPi specific setup tasks
-  include_tasks: raspberrypi_tasks.yml
-  when: "'raspberrypi' in group_names"
+- name: Install common packages
+  apt:
+    name: "{{ basic_packages }}"
+    update_cache: true
+    state: present
 
 - name: Blacklist storage devices in multipath configuration
   include_tasks: multipath_blacklist.yml
+
+- name: Copy bash aliases file
+  template:
+    src: "bash_aliases.j2"
+    dest: "~/.bash_aliases"
+    mode: 0600

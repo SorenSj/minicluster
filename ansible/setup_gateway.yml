@@ -9,34 +9,46 @@
     - name: Include vault variables
       include_vars: "vars/vault.yml"
       tags: ["always"]
+    - name: Collect facts
+      ansible.builtin.setup:
+        gather_subset:
+          - "all"
   roles:
     # OS basic setup tasks
     - role: basic_setup
       tags: [os]
-  
+
     # Security Hardening
 #    - role: sorensj.security
 #      tags: [security]
+
+    # Bootstrap configuration
+    - role: robertdebock.roles.bootstrap
+      tags: [bootstrap]
+
+    # Core dependencies configuration
+    - role: robertdebock.roles.core_dependencies
+      tags: [core]
 
     # DNS/DHCP server configuration
     - role: sorensj.dnsmasq
       tags: [dnsmasq]
 
     # Update DNS server to point to DNSmasq
-    - role: dns
-      tags: [dns]
+    #- role: dns
+    #  tags: [dns]
 
     # Firewall (nftables) configuration
-    - role: ricsanfre.firewall
-      tags: [firewall]
+#    - role: ricsanfre.firewall
+#      tags: [firewall]
 
     # NTP Server configuration
-    - role: ricsanfre.ntp
-      tags: [ntp]
+#    - role: ricsanfre.ntp
+#      tags: [ntp]
 
     # PXE server
-    - role: pxe-server
-      tags: [pxe]
+#    - role: pxe-server
+#      tags: [pxe]
 
   tasks:
     # Aditional Tasks in case alternative architecture (centralized SAN)

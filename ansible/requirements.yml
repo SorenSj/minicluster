@@ -1,9 +1,13 @@
 ---
+# external roles and collections to download
+# install: ansible-galaxy install -r requirements.yml
+
 roles:
+  - name: bendews.letsencrypt-cloudflare
   - name: hifis.unattended-upgrades
     version: v3.3.0
-  - name: nephelaiio.acme_certificate_cloudflare
-    version: 3.0.0
+#  - name: nephelaiio.acme_certificate_cloudflare
+#    version: 3.0.0
   - name: ricsanfre.firewall
     version: v1.0.0
 #  - name: ricsanfre.security
@@ -45,3 +49,7 @@ collections:
     version: 1.5.4
   - name: community.crypto
     version: 2.16.1
+  - name: robertdebock.roles
+    version: 1.10.6
+  - name: ansibleguy.nftables
+    version: 1.0.2
