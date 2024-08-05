@@ -1,39 +1,43 @@
 ---
 # gateway node variables
-
 ########################
 # dnsmasq role variables
 ########################
-dnsmasq_except_interface: '{{ wan_network_if_ip }}'
-dnsmasq_subnets:
-  - name: '{{ wan_dns_domain }}'
-    port: '{{ wan_port }}'
-    subnet: '{{ wan_network_cidr }}'
-    range: '{{ wan_network_dhcp_range }}'
-    gw: '{{ wan_gw_ip }}'
-    mask: '{{ wan_network_mask }}'
-    listen: '{{ wan_network_if_ip }}'
-  - name: '{{ lan_dns_domain }}'
-    port: '{{ lan_port }}'
-    subnet: '{{ lan_network_cidr }}'
-    range: '{{ lan_network_dhcp_range }}'
-    gw: '{{ lan_gw_ip }}'
-    mask: '{{ lan_network_mask }}'
-    listen: '{{ lan_network_if_ip }}'
-  - name: '{{ dmz_dns_domain }}'
-    port: '{{ dmz_port }}'
-    subnet: '{{ dmz_network_cidr }}'
-    range: '{{ dmz_network_dhcp_range }}'
-    gw: '{{ dmz_gw_ip }}'
-    mask: '{{ dmz_network_mask }}'
-    listen: '{{ dmz_network_if_ip }}'
-  - name: '{{ wifi_dns_domain }}'
-    port: '{{ wifi_port }}'
-    subnet: '{{ wifi_network_cidr }}'
-    range: '{{ wifi_network_dhcp_range }}'
-    gw: '{{ wifi_gw_ip }}'
-    mask: '{{ wifi_network_mask }}'
-    listen: '{{ wifi_network_if_ip }}'
+dnsmasq_except_interface: "{{ wan_network_if_ip }}"
+
+dnsmasq_domain_list:
+  - domain_name: "{{ wan_domain_name }}"
+    port_ip: "{{ wan_port }}"
+    subnet_cidr: "{{ wan_network_cidr }}"
+    range_from: "{{ wan_network_dhcp_range_from }}"
+    range_until: "{{ wan_network_dhcp_range_until }}"
+    subnet_gw: "{{ wan_network_gw_ip }}"
+    subnet_mask: "{{ wan_network_mask }}"
+    listen_ip: "{{ wan_network_if_ip }}"
+  - domain_name: "{{ lan_domain_name }}"
+    port_ip: "{{ lan_port }}"
+    subnet_cidr: "{{ lan_network_cidr }}"
+    range_from: "{{ lan_network_dhcp_range_from }}"
+    range_until: "{{ lan_network_dhcp_range_until }}"
+    subnet_gw: "{{ lan_network_gw_ip }}"
+    subnet_mask: "{{ lan_network_mask }}"
+    listen_ip: "{{ lan_network_if_ip }}"
+  - domain_name: "{{ dmz_domain_name }}"
+    port_ip: "{{ dmz_port }}"
+    subnet_cidr: "{{ dmz_network_cidr }}"
+    range_from: "{{ dmz_network_dhcp_range_from }}"
+    range_until: "{{ dmz_network_dhcp_range_until }}"
+    subnet_gw: "{{ dmz_network_gw_ip }}"
+    subnet_mask: "{{ dmz_network_mask }}"
+    listen_ip: "{{ dmz_network_if_ip }}"
+  - domain_name: "{{ wifi_domain_name }}"
+    port_ip: "{{ wifi_port }}"
+    subnet_cidr: "{{ wifi_network_cidr }}"
+    range_from: "{{ wifi_network_dhcp_range_from }}"
+    range_until: "{{ wifi_network_dhcp_range_until }}"
+    subnet_gw: "{{ wifi_network_gw_ip }}"
+    subnet_mask: "{{ wifi_network_mask }}"
+    listen_ip: "{{ wifi_network_if_ip }}"
 
 dnsmasq_expand_hosts: true
 
@@ -41,18 +45,17 @@ dnsmasq_domain_needed: true
 dnsmasq_bogus_priv: true
 
 # Template used to provide main configuration file.
-dnsmasq_conf_template: 'dnsmasq.conf.j2'
+dnsmasq_conf_template: "dnsmasq.conf.j2"
 # Path to the main configuration file
-dnsmasq_conf_directory: '/etc/dnsmasq.d'
-dnsmasq_conf_file: 'dnsmasq.conf'
-
+dnsmasq_conf_directory: "/etc/dnsmasq.d"
+dnsmasq_conf_file: "dnsmasq.conf"
 dnsmasq_dnssec: false
 dnsmasq_dnssec_check_unsigned: false
 dnsmasq_filterwin2k: false
 dnsmasq_strict_order: false
 dnsmasq_no_resolv: false
 dnsmasq_no_poll: false
-dnsmasq_no_dhcp_interface: '{{ wan_port }}'
+dnsmasq_no_dhcp_interface: "{{ wan_port }}"
 dnsmasq_local_service: false
 dnsmasq_bind_interfaces: false
 dnsmasq_no_hosts: false
@@ -70,16 +73,16 @@ dnsmasq_selfmx: false
 dnsmasq_log_queries: false
 dnsmasq_log_dhcp: false
 
-dnsmasq_domain_name: '{{ wan_dns_domain }}'
-dnsmasq_wan_domain_name: '{{ wan_dns_domain }}'
-dnsmasq_lan_domain_name: '{{ lan_dns_domain }}'
-dnsmasq_dmz_domain_name: '{{ dmz_dns_domain }}'
-dnsmasq_wifi_domain_name: '{{ wifi_dns_domain }}'
+dnsmasq_domain_name: "{{ wan_domain_name }}"
+dnsmasq_wan_domain_name: "{{ wan_domain_name }}"
+dnsmasq_lan_domain_name: "{{ lan_domain_domain }}"
+dnsmasq_dmz_domain_name: "{{ dmz_domain_domain }}"
+dnsmasq_wifi_domain_name: "{{ wifi_domain_domain }}"
 
 dnsmasq_upstream_dns_servers:
-  - '{{ global_dns1 }}'
-  - '{{ global_dns2 }}'
-dnsmasq_dhcp_range: '10.0.0.100,10.0.0.149'
+  - "{{ global_dns1 }}"
+  - "{{ global_dns2 }}"
+dnsmasq_dhcp_range: "10.0.0.100,10.0.0.149"
 dnsmasq_additional_dhcp_hosts:
   wifi_dhcp:
     desc: "Airport Time Capsule"
@@ -92,11 +95,11 @@ dnsmasq_additional_dns_hosts:
   ntp_server:
     desc: "NTP Server"
     hostname: ntp
-    ip: '{{ dmz_network_if_ip }}'
+    ip: "{{ dmz_network_if_ip }}"
   dns_server:
     desc: "DNS Server"
     hostname: dns
-    ip: '{{ dmz_network_if_ip }}'
+    ip: "{{ dmz_network_if_ip }}"
   s3_server:
     desc: "S3 Server"
     hostname: s3
@@ -136,7 +139,7 @@ dnsmasq_additional_dns_hosts:
     hostname: vault
     ip: 10.0.0.1
 dnsmasq_enable_tftp: true
-dnsmasq_tftp_root: '{{ tftp_dir_path }}'
+dnsmasq_tftp_root: "{{ tftp_dir_path }}"
 dnsmasq_additional_conf: |-
   # Enabling logs
   log-queries
@@ -163,11 +166,11 @@ ntp_allow_hosts: [10.0.0.0/16]
 # tcp 8200, 8201 Vault server
 # udp 69, TFTP server
 # TCP 6443 load balancer K3S API
-in_tcp_port: '{ ssh, https, http, iscsi-target, 9100, 8200, 8201, 6443 }'
-in_udp_port: '{ snmp, domain, ntp, bootps, 69 }'
+in_tcp_port: "{ ssh, https, http, iscsi-target, 9100, 8200, 8201, 6443 }"
+in_udp_port: "{ snmp, domain, ntp, bootps, 69 }"
 # tcp 9091 minio server
-forward_tcp_port: '{ http, https, ssh, 9091 }'
-forward_udp_port: '{ domain, ntp }'
+forward_tcp_port: "{ http, https, ssh, 9091 }"
+forward_udp_port: "{ domain, ntp }"
 # Enabling forwarding and NAT
 firewall_forward_enabled: true
 firewall_nat_enabled: true
@@ -181,16 +184,16 @@ nft_define_host:
     value: "{{ dmz_port }}"
   lan network:
     name: lan_network
-    value: '{{ lan_network_cidr }}'
+    value: "{{ lan_network_cidr }}"
   dmz network:
     name: dmz_network
-    value: '{{ dmz_network_cidr }}'
+    value: "{{ dmz_network_cidr }}"
   forward tcp accepted:
     name: forward_tcp_accept
-    value: '{{ forward_tcp_port }}'
+    value: "{{ forward_tcp_port }}"
   forward udp accepted:
     name: forward_udp_accept
-    value: '{{ forward_udp_port }}'
+    value: "{{ forward_udp_port }}"
 # Forward Definitions
 nft_set_host:
   forward_tcp_accept:
@@ -248,7 +251,7 @@ restic_clean_service: true
 ########################
 # PXE server variables #
 ########################
-kick_start_server: '{{ dmz_network_if_ip }}'
+kick_start_server: "{{ dmz_network_if_ip }}"
 
 ##########################
 # Vault server variables #

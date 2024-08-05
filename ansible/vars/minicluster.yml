@@ -75,13 +75,13 @@ ingress_basic_auth_user: "{{ vault.ingress.admin.user }}"
 ingress_basic_auth_passwd: "{{ vault.ingress.admin.password }}"
 
 # DNS cluster service end-points
-traefik_dashboard_dns: "traefik.{{ dmz_dns_domain }}"
-longhorn_dashboard_dns: "storage.{{ dmz_dns_domain }}"
-kibana_dashboard_dns: "kibana.{{ dmz_dns_domain }}"
-elasticsearch_dns: "elasticsearch.{{ dmz_dns_domain }}"
-fluentd_dns: "fluentd.{{ dmz_dns_domain }}"
-monitoring_dns: "monitoring.{{ dmz_dns_domain }}"
-linkerd_dashboard_dns: "linkerd.{{ dmz_dns_domain }}"
+traefik_dashboard_dns: "traefik.{{ dmz_domain_name }}"
+longhorn_dashboard_dns: "storage.{{ dmz_domain_name }}"
+kibana_dashboard_dns: "kibana.{{ dmz_domain_name }}"
+elasticsearch_dns: "elasticsearch.{{ dmz_domain_name }}"
+fluentd_dns: "fluentd.{{ dmz_domain_name }}"
+monitoring_dns: "monitoring.{{ dmz_domain_name }}"
+linkerd_dashboard_dns: "linkerd.{{ dmz_domain_name }}"
 
 #################################
 # TLS Certificates: LetsEncrypt #

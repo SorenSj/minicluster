@@ -21,37 +21,45 @@ centralized_san: false
 #########################
 # Network configuration #
 #########################
+# WAN network
+wan_domain_name: mylabnet.dk
 wan_port: enp3s0
 wan_network_cidr: 192.168.1.0/24
 wan_network_if_ip: 192.168.1.10
 wan_network_mask: 255.255.255.0
-wan_gw_ip: 192.168.1.254
+wan_network_gw_ip: 192.168.1.254
+wan_network_dhcp_range_from: 192.168.1.100
+wan_network_dhcp_range_until: 192.168.1.149
+# LAN network
+lan_domain_name: mylabnet.dk
 lan_port: enx00e04c364372
 lan_network_cidr: 10.0.1.0/24
 lan_network_if_ip: 10.0.1.1
 lan_network_mask: 255.255.255.0
-lan_gw_ip: 10.0.1.1
+lan_network_gw_ip: 10.0.1.1
+lan_network_dhcp_range_from: 10.0.1.100
+lan_network_dhcp_range_until: 10.0.1.149
+# DMZ network
+dmz_domain_name: dmz.mylabnet.dk
 dmz_port: enx00e04c680063
 dmz_network_cidr: 10.0.2.0/24
 dmz_network_if_ip: 10.0.2.1
 dmz_network_mask: 255.255.255.0
-dmz_gw_ip: 10.0.2.1
+dmz_network_gw_ip: 10.0.2.1
+dmz_network_dhcp_range_from: 10.0.2.100
+dmz_network_dhcp_range_until: 10.0.2.149
+# WiFi network
+wifi_domain_name: wifi.mylabnet.dk
 wifi_port: wlan0
 wifi_network_cidr: 10.0.3.0/24
 wifi_network_if_ip: 10.0.3.1
 wifi_network_mask: 255.255.255.0
-wifi_gw_ip: 10.0.3.1
+wifi_network_gw_ip: 10.0.3.1
+wifi_network_dhcp_range_from: 10.0.3.100
+wifi_network_dhcp_range_until: 10.0.3.149
+# Global DNS servers
 global_dns1: 108.162.195.90
 global_dns2: 162.159.38.251
-
-#####################
-# DNS configuration #
-#####################
-# DNS server
-wan_dns_domain: mylabnet.dk
-lan_dns_domain: mylabnet.dk
-dmz_dns_domain: dmz.mylabnet.dk
-wifi_dns_domain: wifi.mylabnet.dk
 
 # TFTP configuration
 tftp_dir_path: "/srv/tftp"
