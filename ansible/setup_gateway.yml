@@ -7,7 +7,7 @@
   become: true
   pre_tasks:
     - name: Include vault variables
-      include_vars: "vars/vault.yml"
+      include_vars: "vault.yml"
       tags: ["always"]
     - name: Collect facts
       ansible.builtin.setup:
