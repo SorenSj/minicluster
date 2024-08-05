@@ -5,6 +5,7 @@
   gather_facts: true
   tags: [gateway]
   become: true
+
   pre_tasks:
     - name: Include vault variables
       include_vars: "vault.yml"
@@ -12,59 +13,61 @@
     - name: Collect facts
       ansible.builtin.setup:
         gather_subset:
-          - "all"
-  roles:
-    # OS basic setup tasks
-    - role: basic_setup
-      tags: [os]
-
-    # Security Hardening
-#    - role: sorensj.security
-#      tags: [security]
-
-    # Bootstrap configuration
-    - role: robertdebock.roles.bootstrap
-      tags: [bootstrap]
-
-    # Core dependencies configuration
-    - role: robertdebock.roles.core_dependencies
-      tags: [core]
-
-    # DNS/DHCP server configuration
-    - role: sorensj.dnsmasq
-      tags: [dnsmasq]
-
-    # Update DNS server to point to DNSmasq
-    #- role: dns
-    #  tags: [dns]
-
-    # Firewall (nftables) configuration
-#    - role: ricsanfre.firewall
-#      tags: [firewall]
-
-    # NTP Server configuration
-#    - role: ricsanfre.ntp
-#      tags: [ntp]
-
-    # PXE server
-#    - role: pxe-server
-#      tags: [pxe]
+          - min
+      tags: ["always"]
 
   tasks:
-    # Aditional Tasks in case alternative architecture (centralized SAN)
-    - name: Centralized SAN
-      block:
-        # Include centralized san variables
-        - name: Include iSCSI variables
-          include_vars:
-            file: vars/centralized_san/iscsi_target.yml
-        # iSCSI LUNs: LVM Volumes configuration
-        - name: Configure iSCSI SAN Target
-          include_role:
-            name: ricsanfre.storage
-        # iSCSI LUNs: LVM Volumes configuration
-        - name: Configure iSCSI SAN Target
-          include_role:
-            name: ricsanfre.iscsi_target
-      when: centralized_san
-      tags: [iscsi]
+    - name: Bootstrap configuration
+      ansible.builtin.import_role:
+        name: robertdebock.roles.bootstrap
+      tags:
+        - bootstrap
+
+    - name: Core dependencies configuration
+      ansible.builtin.import_role:
+        name: robertdebock.roles.core_dependencies
+      tags:
+        - core
+
+    - name: OS basic setup tasks
+      ansible.builtin.import_role:
+        name: basic_setup
+      tags:
+        - os
+
+    - name: Include dnsmasq
+      ansible.builtin.import_role:
+        name: sorensj.dnsmasq
+      tags:
+        - dnsmasq
+
+#    - name: Security Hardening
+#      ansible.builtin.import_role:
+#        name: sorensj.security
+#      tags:
+#        - security
+
+#    - name: Update DNS server to point to DNSmasq
+#      ansible.builtin.import_role:
+#        name: dns
+#      tags:
+#        - dns
+
+#    - name: Firewall (nftables) configuration
+#      ansible.builtin.import_role:
+#        name: ricsanfre.firewall
+#      tags:
+#        - firewall
+
+#    - name: NTP Server configuration
+#      ansible.builtin.import_role:
+#        name: ricsanfre.ntp
+#      tags:
+#        - ntp
+
+#    - name: PXE server
+#      ansible.builtin.import_role:
+#        name: pxe-server
+#      tags:
+#        - pxe
+

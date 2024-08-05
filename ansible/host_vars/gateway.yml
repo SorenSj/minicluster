@@ -70,11 +70,11 @@ dnsmasq_selfmx: false
 dnsmasq_log_queries: false
 dnsmasq_log_dhcp: false
 
+dnsmasq_domain_name: '{{ wan_dns_domain }}'
 dnsmasq_wan_domain_name: '{{ wan_dns_domain }}'
 dnsmasq_lan_domain_name: '{{ lan_dns_domain }}'
 dnsmasq_dmz_domain_name: '{{ dmz_dns_domain }}'
 dnsmasq_wifi_domain_name: '{{ wifi_dns_domain }}'
-
 
 dnsmasq_upstream_dns_servers:
   - '{{ global_dns1 }}'
