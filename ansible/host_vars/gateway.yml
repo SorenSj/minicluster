@@ -4,13 +4,78 @@
 ########################
 # dnsmasq role variables
 ########################
-dnsmasq_interface: '{{ dmz_port }}'
-dnsmasq_listen_address: '{{ dmz_network_if_ip }}'
-dnsmasq_domain_name: '{{ dmz_dns_domain }}'
+dnsmasq_except_interface: '{{ wan_network_if_ip }}'
+dnsmasq_subnets:
+  - name: '{{ wan_dns_domain }}'
+    port: '{{ wan_port }}'
+    subnet: '{{ wan_network_cidr }}'
+    range: '{{ wan_network_dhcp_range }}'
+    gw: '{{ wan_gw_ip }}'
+    mask: '{{ wan_network_mask }}'
+    listen: '{{ wan_network_if_ip }}'
+  - name: '{{ lan_dns_domain }}'
+    port: '{{ lan_port }}'
+    subnet: '{{ lan_network_cidr }}'
+    range: '{{ lan_network_dhcp_range }}'
+    gw: '{{ lan_gw_ip }}'
+    mask: '{{ lan_network_mask }}'
+    listen: '{{ lan_network_if_ip }}'
+  - name: '{{ dmz_dns_domain }}'
+    port: '{{ dmz_port }}'
+    subnet: '{{ dmz_network_cidr }}'
+    range: '{{ dmz_network_dhcp_range }}'
+    gw: '{{ dmz_gw_ip }}'
+    mask: '{{ dmz_network_mask }}'
+    listen: '{{ dmz_network_if_ip }}'
+  - name: '{{ wifi_dns_domain }}'
+    port: '{{ wifi_port }}'
+    subnet: '{{ wifi_network_cidr }}'
+    range: '{{ wifi_network_dhcp_range }}'
+    gw: '{{ wifi_gw_ip }}'
+    mask: '{{ wifi_network_mask }}'
+    listen: '{{ wifi_network_if_ip }}'
+
+dnsmasq_expand_hosts: true
+
+dnsmasq_domain_needed: true
+dnsmasq_bogus_priv: true
+
 # Template used to provide main configuration file.
 dnsmasq_conf_template: 'dnsmasq.conf.j2'
 # Path to the main configuration file
 dnsmasq_conf_directory: '/etc/dnsmasq.d'
+dnsmasq_conf_file: 'dnsmasq.conf'
+
+dnsmasq_dnssec: false
+dnsmasq_dnssec_check_unsigned: false
+dnsmasq_filterwin2k: false
+dnsmasq_strict_order: false
+dnsmasq_no_resolv: false
+dnsmasq_no_poll: false
+dnsmasq_no_dhcp_interface: '{{ wan_port }}'
+dnsmasq_local_service: false
+dnsmasq_bind_interfaces: false
+dnsmasq_no_hosts: false
+dnsmasq_enable_ra: false
+dnsmasq_read_ethers: false
+dnsmasq_tftp_no_fail: false
+dnsmasq_tftp_secure: false
+dnsmasq_tftp_no_blocksize: false
+dnsmasq_dhcp_authoritative: true
+dnsmasq_dhcp_rapid_commit: false
+dnsmasq_no_negcache: false
+dnsmasq_dhcp_script: /bin/echo
+dnsmasq_localmx: false
+dnsmasq_selfmx: false
+dnsmasq_log_queries: false
+dnsmasq_log_dhcp: false
+
+dnsmasq_wan_domain_name: '{{ wan_dns_domain }}'
+dnsmasq_lan_domain_name: '{{ lan_dns_domain }}'
+dnsmasq_dmz_domain_name: '{{ dmz_dns_domain }}'
+dnsmasq_wifi_domain_name: '{{ wifi_dns_domain }}'
+
+
 dnsmasq_upstream_dns_servers:
   - '{{ global_dns1 }}'
   - '{{ global_dns2 }}'
@@ -20,6 +85,9 @@ dnsmasq_additional_dhcp_hosts:
     desc: "Airport Time Capsule"
     mac: c4:b3:01:da:6b:05
     ip: 10.0.1.154
+  router_dhcp:
+    desc: "Default Internet Router"
+    ip: 192.168.1.254
 dnsmasq_additional_dns_hosts:
   ntp_server:
     desc: "NTP Server"
@@ -85,7 +153,7 @@ dnsmasq_additional_conf: |-
 ####################
 # ntp role variables
 ####################
-ntp_allow_hosts: [10.0.0.0/24]
+ntp_allow_hosts: [10.0.0.0/16]
 
 #########################
 # firewall role variables
