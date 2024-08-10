@@ -38,18 +38,20 @@ roles:
 #    version: v1.0.0
 collections:
   - name: community.general
-    version: 8.0.1
+    version: 9.2.0
   - name: kubernetes.core
-    version: 2.4.0
+    version: 5.0.0
   - name: community.hashi_vault
-    version: 5.0.1
+    version: 6.0.2
   - name: community.sops
-    version: 1.6.0
+    version: 1.8.1
   - name: ansible.posix
     version: 1.5.4
   - name: community.crypto
-    version: 2.16.1
+    version: 2.21.1
   - name: robertdebock.roles
     version: 1.10.6
   - name: ansibleguy.nftables
     version: 1.0.2
+  - name: pfsensible.core
+    version: 0.6.1
