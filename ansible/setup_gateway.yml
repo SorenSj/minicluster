@@ -10,16 +10,16 @@
     - name: Include vault variables
       ansible.builtin.include_vars: "vault.yml"
       tags: ["always"]
-    - name: Include gateway variables
-      ansible.builtin.include_vars:
-        dir: host_vars
-        files_matching: gateway.yml
-      tags: ["always"]
-    - name: Collect facts
-      ansible.builtin.setup:
-        gather_subset:
-          - min
-      tags: ["always"]
+#   - name: Include gateway variables
+#     ansible.builtin.include_vars:
+#        dir: host_vars
+#        files_matching: gateway.yml
+#      tags: ["always"]
+#    - name: Collect facts
+#      ansible.builtin.setup:
+#        gather_subset:
+#          - min
+#      tags: ["always"]
 
   tasks:
     - name: Bootstrap configuration

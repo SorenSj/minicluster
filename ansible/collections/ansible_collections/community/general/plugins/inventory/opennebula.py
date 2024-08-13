@@ -98,6 +98,8 @@ from ansible.errors import AnsibleError
 from ansible.plugins.inventory import BaseInventoryPlugin, Constructable
 from ansible.module_utils.common.text.converters import to_native
 
+from ansible_collections.community.general.plugins.plugin_utils.unsafe import make_unsafe
+
 from collections import namedtuple
 import os
 
@@ -141,7 +143,8 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
             nic = [nic]
 
         for net in nic:
-            return net['IP']
+            if net.get('IP'):
+                return net['IP']
 
         return False
 
@@ -215,6 +218,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
         filter_by_label = self.get_option('filter_by_label')
         servers = self._retrieve_servers(filter_by_label)
         for server in servers:
+            server = make_unsafe(server)
             hostname = server['name']
             # check for labels
             if group_by_labels and server['LABELS']:

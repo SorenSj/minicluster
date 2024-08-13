@@ -3,7 +3,7 @@
 version: 2
 renderer: networkd
 wifis:
-  wlan0:    # LAN
+wlp2s0:    # LAN
     dhcp4: false
     optional: true
     access-points:

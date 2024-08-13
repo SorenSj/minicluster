@@ -64,9 +64,10 @@ options:
   timeout:
     description:
       - Timeout in seconds for HTTP requests to OOB controller.
-      - The default value for this param is C(10) but that is being deprecated
-        and it will be replaced with C(60) in community.general 9.0.0.
+      - The default value for this parameter changed from V(10) to V(60)
+        in community.general 9.0.0.
     type: int
+    default: 60
   boot_order:
     required: false
     description:
@@ -88,6 +89,12 @@ options:
       - ID of the System, Manager or Chassis to modify.
     type: str
     version_added: '0.2.0'
+  service_id:
+    required: false
+    description:
+      - ID of the manager to update.
+    type: str
+    version_added: '8.4.0'
   nic_addr:
     required: false
     description:
@@ -160,6 +167,18 @@ options:
     type: dict
     default: {}
     version_added: '7.5.0'
+  ciphers:
+    required: false
+    description:
+      - SSL/TLS Ciphers to use for the request.
+      - 'When a list is provided, all ciphers are joined in order with V(:).'
+      - See the L(OpenSSL Cipher List Format,https://www.openssl.org/docs/manmaster/man1/openssl-ciphers.html#CIPHER-LIST-FORMAT)
+        for more details.
+      - The available ciphers is dependent on the Python and OpenSSL/LibreSSL versions.
+    type: list
+    elements: str
+    version_added: 9.2.0
+
 author:
   - "Jose Delarosa (@jose-delarosa)"
   - "T S Kushal (@TSKushal)"
@@ -334,6 +353,15 @@ EXAMPLES = '''
         RAIDType: "RAID0"
         Drives:
           - "/redfish/v1/Systems/1/Storage/DE00B000/Drives/1"
+
+  - name: Set service identification to {{ service_id }}
+    community.general.redfish_config:
+      category: Manager
+      command: SetServiceIdentification
+      service_id: "{{ service_id }}"
+      baseuri: "{{ baseuri }}"
+      username: "{{ username }}"
+      password: "{{ password }}"
 '''
 
 RETURN = '''
@@ -353,7 +381,7 @@ from ansible.module_utils.common.text.converters import to_native
 CATEGORY_COMMANDS_ALL = {
     "Systems": ["SetBiosDefaultSettings", "SetBiosAttributes", "SetBootOrder",
                 "SetDefaultBootOrder", "EnableSecureBoot", "SetSecureBoot", "DeleteVolumes", "CreateVolume"],
-    "Manager": ["SetNetworkProtocols", "SetManagerNic", "SetHostInterface"],
+    "Manager": ["SetNetworkProtocols", "SetManagerNic", "SetHostInterface", "SetServiceIdentification"],
     "Sessions": ["SetSessionService"],
 }
 
@@ -369,13 +397,14 @@ def main():
             password=dict(no_log=True),
             auth_token=dict(no_log=True),
             bios_attributes=dict(type='dict', default={}),
-            timeout=dict(type='int'),
+            timeout=dict(type='int', default=60),
             boot_order=dict(type='list', elements='str', default=[]),
             network_protocols=dict(
                 type='dict',
                 default={}
             ),
             resource_id=dict(),
+            service_id=dict(),
             nic_addr=dict(default='null'),
             nic_config=dict(
                 type='dict',
@@ -388,7 +417,8 @@ def main():
             storage_subsystem_id=dict(type='str', default=''),
             volume_ids=dict(type='list', default=[], elements='str'),
             secure_boot_enable=dict(type='bool', default=True),
-            volume_details=dict(type='dict', default={})
+            volume_details=dict(type='dict', default={}),
+            ciphers=dict(type='list', elements='str'),
         ),
         required_together=[
             ('username', 'password'),
@@ -401,16 +431,6 @@ def main():
         ],
         supports_check_mode=False
     )
-
-    if module.params['timeout'] is None:
-        timeout = 10
-        module.deprecate(
-            'The default value {0} for parameter param1 is being deprecated and it will be replaced by {1}'.format(
-                10, 60
-            ),
-            version='9.0.0',
-            collection_name='community.general'
-        )
 
     category = module.params['category']
     command_list = module.params['command']
@@ -445,6 +465,9 @@ def main():
     # HostInterface instance ID
     hostinterface_id = module.params['hostinterface_id']
 
+    # Service Identification
+    service_id = module.params['service_id']
+
     # Sessions config options
     sessions_config = module.params['sessions_config']
 
@@ -459,10 +482,14 @@ def main():
     volume_details = module.params['volume_details']
     storage_subsystem_id = module.params['storage_subsystem_id']
 
+    # ciphers
+    ciphers = module.params['ciphers']
+
     # Build root URI
     root_uri = "https://" + module.params['baseuri']
     rf_utils = RedfishUtils(creds, root_uri, timeout, module,
-                            resource_id=resource_id, data_modification=True, strip_etag_quotes=strip_etag_quotes)
+                            resource_id=resource_id, data_modification=True, strip_etag_quotes=strip_etag_quotes,
+                            ciphers=ciphers)
 
     # Check that Category is valid
     if category not in CATEGORY_COMMANDS_ALL:
@@ -512,6 +539,8 @@ def main():
                 result = rf_utils.set_manager_nic(nic_addr, nic_config)
             elif command == "SetHostInterface":
                 result = rf_utils.set_hostinterface_attributes(hostinterface_config, hostinterface_id)
+            elif command == "SetServiceIdentification":
+                result = rf_utils.set_service_identification(service_id)
 
     elif category == "Sessions":
         # execute only if we find a Sessions resource

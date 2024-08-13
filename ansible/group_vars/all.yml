@@ -23,43 +23,70 @@ centralized_san: false
 #########################
 # WAN network
 wan_domain_name: mylabnet.dk
-wan_port: enp3s0
-wan_network_cidr: 192.168.1.0/24
-wan_network_if_ip: 192.168.1.10
-wan_network_mask: 255.255.255.0
-wan_network_gw_ip: 192.168.1.254
-wan_network_dhcp_range_from: 192.168.1.100
-wan_network_dhcp_range_until: 192.168.1.149
+wan_port_name: enp3s0
+wan_network_cidr_ipv4: 192.168.1.0/24
+wan_network_cidr_ipv6: ::ffff:c0a8:100/112
+wan_network_if_ipv4: 192.168.1.10
+wan_network_if_ipv6: ::ffff:c0a8:10a
+wan_network_mask_ipv4: 255.255.255.0
+wan_network_mask_ipv6: ::ffff:ffff:0
+wan_network_gw_ipv4: 192.168.1.254
+wan_network_gw_ipv6: ::ffff:c0a8:1fe
+wan_network_dhcp_range_from_ipv4: 192.168.1.100
+wan_network_dhcp_range_from_ipv6: ::ffff:c0a8:200
+wan_network_dhcp_range_until_ipv4: 192.168.1.199
+wan_network_dhcp_range_until_ipv6: ::ffff:c0a8:ffff
 # LAN network
 lan_domain_name: mylabnet.dk
-lan_port: enx00e04c364372
-lan_network_cidr: 10.0.1.0/24
-lan_network_if_ip: 10.0.1.1
-lan_network_mask: 255.255.255.0
-lan_network_gw_ip: 10.0.1.1
-lan_network_dhcp_range_from: 10.0.1.100
-lan_network_dhcp_range_until: 10.0.1.149
+lan_port_name: enx00e04c364372
+lan_network_cidr_ipv4: 10.0.1.0/24
+lan_network_cidr_ipv6: ::ffff:a00:100/112
+lan_network_if_ipv4: 10.0.1.1
+lan_network_if_ipv6: ::ffff:a00:101
+lan_network_mask_ipv4: 255.255.255.0
+lan_network_mask_ipv6: ::ffff:ffff:0
+lan_network_gw_ipv4: 10.0.1.1
+lan_network_gw_ipv6: ::ffff:a00:101
+lan_network_dhcp_range_from_ipv4: 10.0.1.100
+lan_network_dhcp_range_from_ipv6: ::ffff:a00:164
+lan_network_dhcp_range_until_ipv4: 10.0.1.199
+lan_network_dhcp_range_until_ipv6: ::ffff:a00:1c7
 # DMZ network
-dmz_domain_name: dmz.mylabnet.dk
-dmz_port: enx00e04c680063
-dmz_network_cidr: 10.0.2.0/24
-dmz_network_if_ip: 10.0.2.1
-dmz_network_mask: 255.255.255.0
-dmz_network_gw_ip: 10.0.2.1
-dmz_network_dhcp_range_from: 10.0.2.100
-dmz_network_dhcp_range_until: 10.0.2.149
+dmz_domain_name: dmzmylabnet.dk
+dmz_port_name: enx00e04c680063
+dmz_network_cidr_ipv4: 10.0.2.0/24
+dmz_network_cidr_ipv6: ::ffff:a00:200/112
+dmz_network_if_ipv4: 10.0.2.1
+dmz_network_if_ipv6: ::ffff:a00:201
+dmz_network_mask_ipv4: 255.255.255.0
+dmz_network_mask_ipv6: ::ffff:ffff:0
+dmz_network_gw_ipv4: 10.0.2.1
+dmz_network_gw_ipv6: ::ffff:a00:201
+dmz_network_dhcp_range_from_ipv4: 10.0.2.100
+dmz_network_dhcp_range_from_ipv6: ::ffff:a00:264
+dmz_network_dhcp_range_until_ipv4: 10.0.2.199
+dmz_network_dhcp_range_until_ipv6: ::ffff:a00:2c7
 # WiFi network
 wifi_domain_name: wifi.mylabnet.dk
-wifi_port: wlan0
-wifi_network_cidr: 10.0.3.0/24
-wifi_network_if_ip: 10.0.3.1
-wifi_network_mask: 255.255.255.0
-wifi_network_gw_ip: 10.0.3.1
-wifi_network_dhcp_range_from: 10.0.3.100
-wifi_network_dhcp_range_until: 10.0.3.149
+wifi_port_name: enx00e04c680072
+wifi_network_cidr_ipv4: 10.0.3.0/24
+wifi_network_cidr_ipv6: ::ffff:a00:300/112
+wifi_network_if_ipv4: 10.0.3.1
+wifi_network_if_ipv6: ::ffff:a00:301
+wifi_network_mask_ipv4: 255.255.255.0
+wifi_network_mask_ipv6: ::ffff:ffff:0
+wifi_network_gw_ipv4: 10.0.3.1
+wifi_network_gw_ipv6: ::ffff:a00:301
+wifi_network_dhcp_range_from_ipv4: 10.0.3.100
+wifi_network_dhcp_range_from_ipv6: ::ffff:a00:364
+wifi_network_dhcp_range_until_ipv4: 10.0.3.199
+wifi_network_dhcp_range_until_ipv6: ::ffff:a00:3c7
+
 # Global DNS servers
-global_dns1: 108.162.195.90
-global_dns2: 162.159.38.251
+global_dns1_ipv4: 108.162.195.90
+global_dns2_ipv4: 162.159.38.251
+global_dns3_ipv4: 8.8.8.8
+global_dns4_ipv4: 8.8.4.4
 
 # TFTP configuration
 tftp_dir_path: "/srv/tftp"

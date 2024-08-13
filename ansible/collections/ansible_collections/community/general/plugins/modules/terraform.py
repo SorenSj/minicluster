@@ -21,7 +21,8 @@ attributes:
   check_mode:
     support: full
   diff_mode:
-    support: none
+    support: full
+    version_added: 8.3.0
 options:
   state:
     choices: ['planned', 'present', 'absent']
@@ -83,7 +84,6 @@ options:
     description:
       - The path to a variables file for Terraform to fill into the TF
         configurations. This can accept a list of paths to multiple variables files.
-      - Up until Ansible 2.9, this option was usable as O(variables_file).
     type: list
     elements: path
     aliases: [ 'variables_file' ]
@@ -376,7 +376,7 @@ def remove_workspace(bin_path, project_path, workspace):
     _workspace_cmd(bin_path, project_path, 'delete', workspace)
 
 
-def build_plan(command, project_path, variables_args, state_file, targets, state, apply_args, plan_path=None):
+def build_plan(command, project_path, variables_args, state_file, targets, state, args, plan_path=None):
     if plan_path is None:
         f, plan_path = tempfile.mkstemp(suffix='.tfplan')
 
@@ -389,10 +389,14 @@ def build_plan(command, project_path, variables_args, state_file, targets, state
             plan_command.append(c)
 
     if state == "present":
-        for a in apply_args:
+        for a in args:
             local_command.remove(a)
         for c in local_command[1:]:
             plan_command.append(c)
+
+    if state == "absent":
+        for a in args:
+            plan_command.append(a)
 
     plan_command.extend(['-input=false', '-no-color', '-detailed-exitcode', '-out', plan_path])
 
@@ -427,6 +431,49 @@ def build_plan(command, project_path, variables_args, state_file, targets, state
         cmd=' '.join(plan_command),
         args=' '.join([shlex_quote(arg) for arg in variables_args])
     ))
+
+
+def get_diff(diff_output):
+    def get_tf_resource_address(e):
+        return e['resource']
+
+    diff_json_output = json.loads(diff_output)
+
+    # Ignore diff if resource_changes does not exists in tfplan
+    if 'resource_changes' in diff_json_output:
+        tf_reosource_changes = diff_json_output['resource_changes']
+    else:
+        module.warn("Cannot find resource_changes in terraform plan, diff/check ignored")
+        return False, {}
+
+    diff_after = []
+    diff_before = []
+    changed = False
+    for item in tf_reosource_changes:
+        item_change = item['change']
+        tf_before_state = {'resource': item['address'], 'change': item['change']['before']}
+        tf_after_state = {'resource': item['address'], 'change': item['change']['after']}
+
+        if item_change['actions'] == ['update'] or item_change['actions'] == ['delete', 'create']:
+            diff_before.append(tf_before_state)
+            diff_after.append(tf_after_state)
+            changed = True
+
+        if item_change['actions'] == ['delete']:
+            diff_before.append(tf_before_state)
+            changed = True
+
+        if item_change['actions'] == ['create']:
+            diff_after.append(tf_after_state)
+            changed = True
+
+    diff_before.sort(key=get_tf_resource_address)
+    diff_after.sort(key=get_tf_resource_address)
+
+    return changed, dict(
+        before=({'data': diff_before}),
+        after=({'data': diff_after}),
+    )
 
 
 def main():
@@ -514,7 +561,7 @@ def main():
 
     def format_args(vars):
         if isinstance(vars, str):
-            return '"{string}"'.format(string=vars.replace('\\', '\\\\').replace('"', '\\"'))
+            return '"{string}"'.format(string=vars.replace('\\', '\\\\').replace('"', '\\"')).replace('\n', '\\n')
         elif isinstance(vars, bool):
             if vars:
                 return 'true'
@@ -620,6 +667,23 @@ def main():
                                  "Consider switching the 'check_destroy' to false to suppress this error")
         command.append(plan_file)
 
+    result_diff = dict()
+    if module._diff or module.check_mode:
+        if state == 'absent':
+            plan_absent_args = ['-destroy']
+            plan_file, needs_application, out, err, command = build_plan(command, project_path, variables_args, state_file,
+                                                                         module.params.get('targets'), state, plan_absent_args, plan_file)
+        diff_command = [command[0], 'show', '-json', plan_file]
+        rc, diff_output, err = module.run_command(diff_command, check_rc=False, cwd=project_path)
+        changed, result_diff = get_diff(diff_output)
+        if rc != 0:
+            if workspace_ctx["current"] != workspace:
+                select_workspace(command[0], project_path, workspace_ctx["current"])
+            module.fail_json(msg=err.rstrip(), rc=rc, stdout=out,
+                             stdout_lines=out.splitlines(), stderr=err,
+                             stderr_lines=err.splitlines(),
+                             cmd=' '.join(command))
+
     if needs_application and not module.check_mode and state != 'planned':
         rc, out, err = module.run_command(command, check_rc=False, cwd=project_path)
         if rc != 0:
@@ -652,7 +716,18 @@ def main():
     if state == 'absent' and workspace != 'default' and purge_workspace is True:
         remove_workspace(command[0], project_path, workspace)
 
-    module.exit_json(changed=changed, state=state, workspace=workspace, outputs=outputs, stdout=out, stderr=err, command=' '.join(command))
+    result = {
+        'state': state,
+        'workspace': workspace,
+        'outputs': outputs,
+        'stdout': out,
+        'stderr': err,
+        'command': ' '.join(command),
+        'changed': changed,
+        'diff': result_diff,
+    }
+
+    module.exit_json(**result)
 
 
 if __name__ == '__main__':

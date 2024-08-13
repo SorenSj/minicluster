@@ -23,7 +23,6 @@ description:
 author:
   - Benedikt Braunger (@benibr)
 requirements:
-  - python >= 2.7
   - python-gitlab python module
 extends_documentation_fragment:
   - community.general.auth_basic
@@ -139,7 +138,8 @@ instance_variable:
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.api import basic_auth_argument_spec
 from ansible_collections.community.general.plugins.module_utils.gitlab import (
-    auth_argument_spec, gitlab_authentication, ensure_gitlab_package, filter_returned_variables
+    auth_argument_spec, gitlab_authentication, filter_returned_variables,
+    list_all_kwargs
 )
 
 
@@ -150,14 +150,7 @@ class GitlabInstanceVariables(object):
         self._module = module
 
     def list_all_instance_variables(self):
-        page_nb = 1
-        variables = []
-        gl_varibales_page = self.instance.variables.list(page=page_nb)
-        while len(gl_varibales_page) > 0:
-            variables += gl_varibales_page
-            page_nb += 1
-            gl_varibales_page = self.instance.variables.list(page=page_nb)
-        return variables
+        return list(self.instance.variables.list(**list_all_kwargs))
 
     def create_variable(self, var_obj):
         if self._module.check_mode:
@@ -326,7 +319,9 @@ def main():
         ],
         supports_check_mode=True
     )
-    ensure_gitlab_package(module)
+
+    # check prerequisites and connect to gitlab server
+    gitlab_instance = gitlab_authentication(module)
 
     purge = module.params['purge']
     state = module.params['state']
@@ -336,8 +331,6 @@ def main():
     if state == 'present':
         if any(x['value'] is None for x in variables):
             module.fail_json(msg='value parameter is required in state present')
-
-    gitlab_instance = gitlab_authentication(module)
 
     this_gitlab = GitlabInstanceVariables(module=module, gitlab_instance=gitlab_instance)
 

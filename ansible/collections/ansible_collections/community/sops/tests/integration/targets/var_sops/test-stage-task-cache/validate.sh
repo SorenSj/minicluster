@@ -1,1 +1,0 @@
-../test-stage-inv-no-cache/validate.sh

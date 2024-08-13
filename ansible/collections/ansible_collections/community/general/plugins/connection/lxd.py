@@ -10,9 +10,9 @@ __metaclass__ = type
 DOCUMENTATION = '''
     author: Matt Clay (@mattclay) <matt@mystile.com>
     name: lxd
-    short_description: Run tasks in lxc containers via lxc CLI
+    short_description: Run tasks in LXD instances via C(lxc) CLI
     description:
-        - Run commands or put/fetch files to an existing lxc container using lxc CLI
+        - Run commands or put/fetch files to an existing instance using C(lxc) CLI.
     options:
       remote_addr:
         description:
@@ -26,7 +26,7 @@ DOCUMENTATION = '''
             - name: ansible_lxd_host
       executable:
         description:
-            - shell to use for execution inside container
+            - Shell to use for execution inside instance.
         default: /bin/sh
         vars:
             - name: ansible_executable
@@ -71,7 +71,7 @@ class Connection(ConnectionBase):
             raise AnsibleError("lxc command not found in PATH")
 
         if self._play_context.remote_user is not None and self._play_context.remote_user != 'root':
-            self._display.warning('lxd does not support remote_user, using container default: root')
+            self._display.warning('lxd does not support remote_user, using default: root')
 
     def _host(self):
         """ translate remote_addr to lxd (short) hostname """
@@ -101,6 +101,8 @@ class Connection(ConnectionBase):
             self.get_option("executable"), "-c", cmd
         ])
 
+        self._display.vvvvv(u"EXEC {0}".format(local_cmd), host=self._host())
+
         local_cmd = [to_bytes(i, errors='surrogate_or_strict') for i in local_cmd]
         in_data = to_bytes(in_data, errors='surrogate_or_strict', nonstring='passthru')
 
@@ -110,10 +112,12 @@ class Connection(ConnectionBase):
         stdout = to_text(stdout)
         stderr = to_text(stderr)
 
+        self._display.vvvvv(u"EXEC lxc output: {0} {1}".format(stdout, stderr), host=self._host())
+
         if "is not running" in stderr:
             raise AnsibleConnectionFailure("instance not running: %s" % self._host())
 
-        if "not found" in stderr:
+        if stderr.strip() == "Error: Instance not found" or stderr.strip() == "error: not found":
             raise AnsibleConnectionFailure("instance not found: %s" % self._host())
 
         return process.returncode, stdout, stderr

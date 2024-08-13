@@ -1,9 +1,160 @@
 ============================
-Community Sops Release Notes
+Community SOPS Release Notes
 ============================
 
 .. contents:: Topics
 
+v1.8.1
+======
+
+Release Summary
+---------------
+
+Bugfix release.
+
+Bugfixes
+--------
+
+- Pass ``config_path`` on SOPS 3.9.0 before the subcommand instead of after it (https://github.com/ansible-collections/community.sops/issues/195, https://github.com/ansible-collections/community.sops/pull/197).
+
+v1.8.0
+======
+
+Release Summary
+---------------
+
+Feature release for supporting improvements coming with SOPS 3.9.0.
+
+Minor Changes
+-------------
+
+- Detect SOPS 3.9.0 and use new ``decrypt`` and ``encrypt`` subcommands (https://github.com/ansible-collections/community.sops/pull/190).
+- sops vars plugin - new option ``handle_unencrypted_files`` allows to control behavior when encountering unencrypted files with SOPS 3.9.0+ (https://github.com/ansible-collections/community.sops/pull/190).
+
+Bugfixes
+--------
+
+- sops_encrypt - properly support ``path_regex`` in ``.sops.yaml`` when SOPS 3.9.0 or later is used (https://github.com/ansible-collections/community.sops/issues/153, https://github.com/ansible-collections/community.sops/pull/190).
+
+v1.7.0
+======
+
+Release Summary
+---------------
+
+Bugfix and feature release to fix installation issues with SOPS 3.9.0.
+
+Minor Changes
+-------------
+
+- sops vars plugin - allow to configure the valid extensions with an ``ansible.cfg`` entry or with an environment variable (https://github.com/ansible-collections/community.sops/pull/185).
+
+Bugfixes
+--------
+
+- Fix RPM URL for the 3.9.0 release (https://github.com/ansible-collections/community.sops/pull/188).
+
+v1.6.7
+======
+
+Release Summary
+---------------
+
+Bugfix release.
+
+Bugfixes
+--------
+
+- sops_encrypt - ensure that output-type is set to ``yaml`` when the file extension ``.yml`` is used. Now both ``.yaml`` and ``.yml`` files use the SOPS ``--output-type=yaml`` formatting (https://github.com/ansible-collections/community.sops/issues/164).
+
+v1.6.6
+======
+
+Release Summary
+---------------
+
+Make fully compatible with and test against sops 3.8.0.
+
+Bugfixes
+--------
+
+- Fix RPM URL for the 3.8.0 release (https://github.com/ansible-collections/community.sops/pull/161).
+
+v1.6.5
+======
+
+Release Summary
+---------------
+
+Make compatible with and test against sops 3.8.0-rc.1.
+
+Bugfixes
+--------
+
+- Avoid pre-releases when picking the latest version when using the GitHub API method (https://github.com/ansible-collections/community.sops/pull/159).
+- Fix changed DEB and RPM URLs for 3.8.0 and its prerelease(s) (https://github.com/ansible-collections/community.sops/pull/159).
+
+v1.6.4
+======
+
+Release Summary
+---------------
+
+Maintenance/bugfix release for the move of sops to the new `getsops GitHub organization <https://github.com/getsops>`__.
+
+Bugfixes
+--------
+
+- install role - fix ``sops_github_latest_detection=latest-release``, which broke due to sops moving to another GitHub organization (https://github.com/ansible-collections/community.sops/pull/151).
+
+v1.6.3
+======
+
+Release Summary
+---------------
+
+Maintenance release with updated documentation.
+
+From this version on, community.sops is using the new `Ansible semantic markup
+<https://docs.ansible.com/ansible/devel/dev_guide/developing_modules_documenting.html#semantic-markup-within-module-documentation>`__
+in its documentation. If you look at documentation with the ansible-doc CLI tool
+from ansible-core before 2.15, please note that it does not render the markup
+correctly. You should be still able to read it in most cases, but you need
+ansible-core 2.15 or later to see it as it is intended. Alternatively you can
+look at `the devel docsite <https://docs.ansible.com/ansible/devel/collections/community/sops/>`__
+for the rendered HTML version of the documentation of the latest release.
+
+Known Issues
+------------
+
+- Ansible markup will show up in raw form on ansible-doc text output for ansible-core before 2.15. If you have trouble deciphering the documentation markup, please upgrade to ansible-core 2.15 (or newer), or read the HTML documentation on https://docs.ansible.com/ansible/devel/collections/community/sops/.
+
+v1.6.2
+======
+
+Release Summary
+---------------
+
+Maintenance release.
+
+Bugfixes
+--------
+
+- install role - make sure that the ``pkg_mgr`` fact is definitely available when installing on ``localhost``. This can improve error messages in some cases (https://github.com/ansible-collections/community.sops/issues/145, https://github.com/ansible-collections/community.sops/pull/146).
+
+v1.6.1
+======
+
+Release Summary
+---------------
+
+Maintenance release.
+
+Bugfixes
+--------
+
+- action plugin helper - fix handling of deprecations for ansible-core 2.14.2 (https://github.com/ansible-collections/community.sops/pull/136).
+- various plugins - remove unnecessary imports (https://github.com/ansible-collections/community.sops/pull/133).
 
 v1.6.0
 ======
@@ -175,7 +326,7 @@ v1.0.5
 Release Summary
 ---------------
 
-This release fixes a bug that prevented correct YAML file to be created when the output was ending in `.yaml`.
+This release fixes a bug that prevented correct YAML file to be created when the output was ending in ``.yaml``.
 
 Bugfixes
 --------
@@ -260,8 +411,8 @@ v0.1.0
 Release Summary
 ---------------
 
-First release of the `community.sops` collection!
-This release includes multiple plugins: an `action` plugin, a `lookup` plugin and a `vars` plugin.
+First release of the ``community.sops`` collection!
+This release includes multiple plugins: an ``action`` plugin, a ``lookup`` plugin and a ``vars`` plugin.
 
 New Plugins
 -----------

@@ -6,17 +6,18 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-import abc
+import collections
+import json
 import os
+import re
 
-from ansible.module_utils import six
 from ansible.module_utils.common.text.converters import to_text, to_native
 
 # Since this is used both by plugins and modules, we need subprocess in case the `module` parameter is not used
 from subprocess import Popen, PIPE
 
 
-# From https://github.com/mozilla/sops/blob/master/cmd/sops/codes/codes.go
+# From https://github.com/getsops/sops/blob/master/cmd/sops/codes/codes.go
 # Should be manually updated
 SOPS_ERROR_CODES = {
     1: "ErrorGeneric",
@@ -46,39 +47,47 @@ SOPS_ERROR_CODES = {
     203: "FileAlreadyEncrypted"
 }
 
+_SOPS_VERSION = re.compile(r'^sops ([0-9]+)\.([0-9]+)\.([0-9]+)')
 
-def _create_single_arg(argument_name):
-    def f(value, arguments, env):
-        arguments.extend([argument_name, to_native(value)])
+
+def _add_argument(arguments_pre, arguments_post, *args, **kwargs):
+    pre = kwargs.pop('pre', False)
+    (arguments_pre if pre else arguments_post).extend(args)
+
+
+def _create_single_arg(argument_name, pre=False):
+    def f(value, arguments_pre, arguments_post, env, version):
+        _add_argument(arguments_pre, arguments_post, argument_name, to_native(value), pre=pre)
 
     return f
 
 
-def _create_comma_separated(argument_name):
-    def f(value, arguments, env):
-        arguments.extend([argument_name, ','.join([to_native(v) for v in value])])
+def _create_comma_separated(argument_name, pre=False):
+    def f(value, arguments_pre, arguments_post, env, version):
+        value = ','.join([to_native(v) for v in value])
+        _add_argument(arguments_pre, arguments_post, argument_name, value, pre=pre)
 
     return f
 
 
-def _create_repeated(argument_name):
-    def f(value, arguments, env):
+def _create_repeated(argument_name, pre=False):
+    def f(value, arguments_pre, arguments_post, env, version):
         for v in value:
-            arguments.extend([argument_name, to_native(v)])
+            _add_argument(arguments_pre, arguments_post, argument_name, to_native(v), pre=pre)
 
     return f
 
 
-def _create_boolean(argument_name):
-    def f(value, arguments, env):
+def _create_boolean(argument_name, pre=False):
+    def f(value, arguments_pre, arguments_post, env, version):
         if value:
-            arguments.append(argument_name)
+            _add_argument(arguments_pre, arguments_post, argument_name, pre=pre)
 
     return f
 
 
 def _create_env_variable(argument_name):
-    def f(value, arguments, env):
+    def f(value, arguments_pre, arguments_post, env, version):
         env[argument_name] = value
 
     return f
@@ -91,7 +100,7 @@ GENERAL_OPTIONS = {
     'aws_access_key_id': _create_env_variable('AWS_ACCESS_KEY_ID'),
     'aws_secret_access_key': _create_env_variable('AWS_SECRET_ACCESS_KEY'),
     'aws_session_token': _create_env_variable('AWS_SESSION_TOKEN'),
-    'config_path': _create_single_arg('--config'),
+    'config_path': _create_single_arg('--config', pre=True),
     'enable_local_keyservice': _create_boolean('--enable-local-keyservice'),
     'keyservice': _create_repeated('--keyservice'),
 }
@@ -114,59 +123,94 @@ ENCRYPT_OPTIONS = {
 
 
 class SopsError(Exception):
-    ''' Extend Exception class with sops specific informations '''
+    ''' Extend Exception class with sops specific information '''
 
-    def __init__(self, filename, exit_code, message, decryption=True):
+    def __init__(self, filename, exit_code, message, decryption=True, operation=None):
+        if operation is None:
+            operation = 'decrypt' if decryption else 'encrypt'
         if exit_code in SOPS_ERROR_CODES:
             exception_name = SOPS_ERROR_CODES[exit_code]
             message = "error with file %s: %s exited with code %d: %s" % (
                 filename, exception_name, exit_code, to_native(message))
         else:
             message = "could not %s file %s; Unknown sops error code: %s; message: %s" % (
-                'decrypt' if decryption else 'encrypt', filename, exit_code, to_native(message))
+                operation, filename, exit_code, to_native(message))
         super(SopsError, self).__init__(message)
 
 
-class Sops():
-    ''' Utility class to perform sops CLI actions '''
+SopsFileStatus = collections.namedtuple('SopsFileStatus', ['encrypted'])
 
-    @staticmethod
-    def _add_options(command, env, get_option_value, options):
+
+class SopsRunner(object):
+    def _add_options(self, command_pre, command_post, env, get_option_value, options):
         if get_option_value is None:
             return
         for option, f in options.items():
             v = get_option_value(option)
             if v is not None:
-                f(v, command, env)
+                f(v, command_pre, command_post, env, self.version)
 
-    @staticmethod
-    def get_sops_binary(get_option_value):
-        cmd = get_option_value('sops_binary') if get_option_value else None
-        if cmd is None:
-            cmd = 'sops'
-        return cmd
+    def _debug(self, message):
+        if self.display:
+            self.display.vvvv(message)
+        elif self.module:
+            self.module.debug(message)
 
-    @staticmethod
-    def decrypt(encrypted_file, content=None,
-                display=None, decode_output=True, rstrip=True, input_type=None, output_type=None, get_option_value=None, module=None):
+    def _warn(self, message):
+        if self.display:
+            self.display.warning(message)
+        elif self.module:
+            self.module.warn(message)
+
+    def __init__(self, binary, module=None, display=None):
+        self.binary = binary
+        self.module = module
+        self.display = display
+
+        self.version = (3, 7, 3)  # if --disable-version-check is not supported, this is version 3.7.3 or older
+        self.version_string = '(before 3.8.0)'
+
+        exit_code, output, err = self._run_command([self.binary, '--version', '--disable-version-check'])
+        if exit_code == 0:
+            m = _SOPS_VERSION.match(output.decode('utf-8'))
+            if m:
+                self.version = int(m.group(1)), int(m.group(2)), int(m.group(3))
+                self.version_string = '%d.%d.%d' % self.version
+                self._debug('SOPS version detected as %s' % (self.version, ))
+            else:
+                self._warn('Cannot extract SOPS version from: %s' % repr(output))
+        else:
+            self._debug('Cannot detect SOPS version efficiently, likely a version before 3.8.0')
+
+    def _run_command(self, command, env=None, data=None, cwd=None):
+        if self.module:
+            return self.module.run_command(command, environ_update=env, cwd=cwd, encoding=None, data=data, binary_data=True)
+
+        process = Popen(command, stdin=None if data is None else PIPE, stdout=PIPE, stderr=PIPE, cwd=cwd, env=env)
+        output, err = process.communicate(input=data)
+        return process.returncode, output, err
+
+    def decrypt(self, encrypted_file, content=None,
+                decode_output=True, rstrip=True, input_type=None, output_type=None, get_option_value=None):
         # Run sops directly, python module is deprecated
-        command = [Sops.get_sops_binary(get_option_value)]
+        command = [self.binary]
+        command_post = []
         env = os.environ.copy()
-        Sops._add_options(command, env, get_option_value, GENERAL_OPTIONS)
+        self._add_options(command, command_post, env, get_option_value, GENERAL_OPTIONS)
+        if self.version >= (3, 9, 0):
+            command.append("decrypt")
+        command.extend(command_post)
         if input_type is not None:
             command.extend(["--input-type", input_type])
         if output_type is not None:
             command.extend(["--output-type", output_type])
+        if self.version < (3, 9, 0):
+            command.append("--decrypt")
         if content is not None:
             encrypted_file = '/dev/stdin'
-        command.extend(["--decrypt", encrypted_file])
+        command.append(encrypted_file)
 
-        if module:
-            exit_code, output, err = module.run_command(command, environ_update=env, encoding=None, data=content, binary_data=True)
-        else:
-            process = Popen(command, stdin=None if content is None else PIPE, stdout=PIPE, stderr=PIPE, env=env)
-            (output, err) = process.communicate(input=content)
-            exit_code = process.returncode
+        exit_code, output, err = self._run_command(command, env=env, data=content)
 
         if decode_output:
             # output is binary, we want UTF-8 string
@@ -175,8 +219,8 @@ class Sops():
 
         # sops logs always to stderr, as stdout is used for
         # file content
-        if err and display:
-            display.vvvv(to_text(err, errors='surrogate_or_strict'))
+        if err:
+            self._debug(u'Unexpected stderr:\n' + to_text(err, errors='surrogate_or_strict'))
 
         if exit_code != 0:
             raise SopsError(encrypted_file, exit_code, err, decryption=True)
@@ -186,35 +230,115 @@ class Sops():
 
         return output
 
-    @staticmethod
-    def encrypt(data, display=None, cwd=None, input_type=None, output_type=None, get_option_value=None, module=None):
+    def encrypt(self, data, cwd=None, input_type=None, output_type=None, filename=None, get_option_value=None):
         # Run sops directly, python module is deprecated
-        command = [Sops.get_sops_binary(get_option_value)]
+        command = [self.binary]
+        command_post = []
         env = os.environ.copy()
-        Sops._add_options(command, env, get_option_value, GENERAL_OPTIONS)
-        Sops._add_options(command, env, get_option_value, ENCRYPT_OPTIONS)
+        self._add_options(command, command_post, env, get_option_value, GENERAL_OPTIONS)
+        self._add_options(command, command_post, env, get_option_value, ENCRYPT_OPTIONS)
+        if self.version >= (3, 9, 0):
+            command.append("encrypt")
+        command.extend(command_post)
         if input_type is not None:
             command.extend(["--input-type", input_type])
         if output_type is not None:
             command.extend(["--output-type", output_type])
-        command.extend(["--encrypt", "/dev/stdin"])
+        if self.version < (3, 9, 0):
+            command.append("--encrypt")
+        if self.version >= (3, 9, 0) and filename:
+            command.extend(["--filename-override", filename])
+        command.append("/dev/stdin")
 
-        if module:
-            exit_code, output, err = module.run_command(command, data=data, binary_data=True, cwd=cwd, environ_update=env, encoding=None)
-        else:
-            process = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE, cwd=cwd, env=env)
-            (output, err) = process.communicate(input=data)
-            exit_code = process.returncode
+        exit_code, output, err = self._run_command(command, env=env, data=data, cwd=cwd)
 
         # sops logs always to stderr, as stdout is used for
         # file content
-        if err and display:
-            display.vvvv(to_text(err, errors='surrogate_or_strict'))
+        if err:
+            self._debug(u'Unexpected stderr:\n' + to_text(err, errors='surrogate_or_strict'))
 
         if exit_code != 0:
             raise SopsError('to stdout', exit_code, err, decryption=False)
 
         return output
+
+    def has_filestatus(self):
+        return self.version >= (3, 9, 0)
+
+    def get_filestatus(self, path):
+        command = [self.binary, 'filestatus', path]
+
+        exit_code, output, err = self._run_command(command)
+
+        # sops logs always to stderr, as stdout is used for
+        # file content
+        if err:
+            self._debug(u'Unexpected stderr:\n' + to_text(err, errors='surrogate_or_strict'))
+
+        if exit_code != 0:
+            raise SopsError(path, exit_code, err, operation='inspect')
+
+        try:
+            result = json.loads(output)
+            return SopsFileStatus(result['encrypted'])
+        except Exception as exc:
+            self._debug(u'Unexpected stdout:\n' + to_text(output, errors='surrogate_or_strict'))
+            raise SopsError(path, 0, 'Cannot decode filestatus result: %s' % exc, operation='inspect')
+
+
+_SOPS_RUNNER_CACHE = dict()
+
+
+class Sops():
+    ''' Utility class to perform sops CLI actions '''
+
+    @staticmethod
+    def get_sops_binary(get_option_value):
+        cmd = get_option_value('sops_binary') if get_option_value else None
+        if cmd is None:
+            cmd = 'sops'
+        return cmd
+
+    @staticmethod
+    def get_sops_runner_from_binary(sops_binary, module=None, display=None):
+        candidates = _SOPS_RUNNER_CACHE.get(sops_binary, [])
+        for cand_module, cand_runner in candidates:
+            if cand_runner is module:
+                return cand_runner
+        runner = SopsRunner(sops_binary, module=module, display=display)
+        candidates.append((module, runner))
+        _SOPS_RUNNER_CACHE[sops_binary] = candidates
+        return runner
+
+    @staticmethod
+    def get_sops_runner_from_options(get_option_value, module=None, display=None):
+        return Sops.get_sops_runner_from_binary(Sops.get_sops_binary(get_option_value), module=module, display=display)
+
+    @staticmethod
+    def decrypt(encrypted_file, content=None,
+                display=None, decode_output=True, rstrip=True, input_type=None, output_type=None, get_option_value=None, module=None):
+        runner = Sops.get_sops_runner_from_options(get_option_value, module=module, display=display)
+        return runner.decrypt(
+            encrypted_file,
+            content=content,
+            decode_output=decode_output,
+            rstrip=rstrip,
+            input_type=input_type,
+            output_type=output_type,
+            get_option_value=get_option_value,
+        )
+
+    @staticmethod
+    def encrypt(data, display=None, cwd=None, input_type=None, output_type=None, get_option_value=None, module=None, filename=None):
+        runner = Sops.get_sops_runner_from_options(get_option_value, module=module, display=display)
+        return runner.encrypt(
+            data,
+            cwd=cwd,
+            input_type=input_type,
+            output_type=output_type,
+            get_option_value=get_option_value,
+            filename=filename,
+        )
 
 
 def get_sops_argument_spec(add_encrypt_specific=False):

@@ -6,9 +6,10 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
 # Community General Collection
 
-[![Build Status](https://dev.azure.com/ansible/community.general/_apis/build/status/CI?branchName=stable-8)](https://dev.azure.com/ansible/community.general/_build?definitionId=31)
+[![Build Status](https://dev.azure.com/ansible/community.general/_apis/build/status/CI?branchName=stable-9)](https://dev.azure.com/ansible/community.general/_build?definitionId=31)
 [![EOL CI](https://github.com/ansible-collections/community.general/workflows/EOL%20CI/badge.svg?event=push)](https://github.com/ansible-collections/community.general/actions)
 [![Codecov](https://img.shields.io/codecov/c/github/ansible-collections/community.general)](https://codecov.io/gh/ansible-collections/community.general)
+[![REUSE status](https://api.reuse.software/badge/github.com/ansible-collections/community.general)](https://api.reuse.software/info/github.com/ansible-collections/community.general)
 
 This repository contains the `community.general` Ansible Collection. The collection is a part of the Ansible package and includes many modules and plugins supported by Ansible community which are not part of more specialized community collections.
 
@@ -24,7 +25,7 @@ If you encounter abusive behavior violating the [Ansible Code of Conduct](https:
 
 ## Tested with Ansible
 
-Tested with the current ansible-core 2.13, ansible-core 2.14, ansible-core 2.15, ansible-core 2.16 releases and the current development version of ansible-core. Ansible-core versions before 2.13.0 are not supported. This includes all ansible-base 2.10 and Ansible 2.9 releases.
+Tested with the current ansible-core 2.13, ansible-core 2.14, ansible-core 2.15, ansible-core 2.16, ansible-core 2.17 releases and the current development version of ansible-core. Ansible-core versions before 2.13.0 are not supported. This includes all ansible-base 2.10 and Ansible 2.9 releases.
 
 ## External requirements
 
@@ -115,7 +116,7 @@ See the [Releasing guidelines](https://github.com/ansible/community-docs/blob/ma
 
 ## Release notes
 
-See the [changelog](https://github.com/ansible-collections/community.general/blob/stable-8/CHANGELOG.rst).
+See the [changelog](https://github.com/ansible-collections/community.general/blob/stable-9/CHANGELOG.md).
 
 ## Roadmap
 
@@ -134,8 +135,8 @@ See [this issue](https://github.com/ansible-collections/community.general/issues
 
 This collection is primarily licensed and distributed as a whole under the GNU General Public License v3.0 or later.
 
-See [LICENSES/GPL-3.0-or-later.txt](https://github.com/ansible-collections/community.general/blob/main/COPYING) for the full text.
+See [LICENSES/GPL-3.0-or-later.txt](https://github.com/ansible-collections/community.general/blob/stable-9/COPYING) for the full text.
 
-Parts of the collection are licensed under the [BSD 2-Clause license](https://github.com/ansible-collections/community.general/blob/main/LICENSES/BSD-2-Clause.txt), the [MIT license](https://github.com/ansible-collections/community.general/blob/main/LICENSES/MIT.txt), and the [PSF 2.0 license](https://github.com/ansible-collections/community.general/blob/main/LICENSES/PSF-2.0.txt).
+Parts of the collection are licensed under the [BSD 2-Clause license](https://github.com/ansible-collections/community.general/blob/stable-9/LICENSES/BSD-2-Clause.txt), the [MIT license](https://github.com/ansible-collections/community.general/blob/stable-9/LICENSES/MIT.txt), and the [PSF 2.0 license](https://github.com/ansible-collections/community.general/blob/stable-9/LICENSES/PSF-2.0.txt).
 
 All files have a machine readable `SDPX-License-Identifier:` comment denoting its respective license(s) or an equivalent entry in an accompanying `.license` file. Only changelog fragments (which will not be part of a release) are covered by a blanket statement in `.reuse/dep5`. This conforms to the [REUSE specification](https://reuse.software/spec/).

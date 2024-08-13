@@ -13,14 +13,16 @@ DOCUMENTATION = '''
 module: proxmox
 short_description: Management of instances in Proxmox VE cluster
 description:
-  - allows you to create/delete/stop instances in Proxmox VE cluster
-  - Starting in Ansible 2.1, it automatically detects containerization type (lxc for PVE 4, openvz for older)
-  - Since community.general 4.0.0 on, there are no more default values, see O(proxmox_default_behavior).
+  - Allows you to create/delete/stop instances in Proxmox VE cluster.
+  - The module automatically detects containerization type (lxc for PVE 4, openvz for older).
+  - Since community.general 4.0.0 on, there are no more default values.
 attributes:
   check_mode:
     support: none
   diff_mode:
     support: none
+  action_group:
+    version_added: 9.0.0
 options:
   password:
     description:
@@ -47,27 +49,59 @@ options:
         comma-delimited list C([volume=]<volume> [,acl=<1|0>] [,mountoptions=<opt[;opt...]>] [,quota=<1|0>]
         [,replicate=<1|0>] [,ro=<1|0>] [,shared=<1|0>] [,size=<DiskSize>])."
       - See U(https://pve.proxmox.com/wiki/Linux_Container) for a full description.
-      - This option has no default unless O(proxmox_default_behavior) is set to V(compatibility); then the default is V(3).
+      - This option is mutually exclusive with O(storage) and O(disk_volume).
     type: str
+  disk_volume:
+    description:
+      - Specify a hash/dictionary of the C(rootfs) disk.
+      - See U(https://pve.proxmox.com/wiki/Linux_Container#pct_mount_points) for a full description.
+      - This option is mutually exclusive with O(storage) and O(disk).
+    type: dict
+    version_added: 9.2.0
+    suboptions:
+      storage:
+        description:
+          - O(disk_volume.storage) is the storage identifier of the storage to use for the C(rootfs).
+          - Mutually exclusive with O(disk_volume.host_path).
+        type: str
+      volume:
+        description:
+          - O(disk_volume.volume) is the name of an existing volume.
+          - If not defined, the module will check if one exists. If not, a new volume will be created.
+          - If defined, the volume must exist under that name.
+          - Required only if O(disk_volume.storage) is defined and mutually exclusive with O(disk_volume.host_path).
+        type: str
+      size:
+        description:
+          - O(disk_volume.size) is the size of the storage to use.
+          - The size is given in GB.
+          - Required only if O(disk_volume.storage) is defined and mutually exclusive with O(disk_volume.host_path).
+        type: int
+      host_path:
+        description:
+          - O(disk_volume.host_path) defines a bind or device path on the PVE host to use for the C(rootfs).
+          - Mutually exclusive with O(disk_volume.storage), O(disk_volume.volume), and O(disk_volume.size).
+        type: path
+      options:
+        description:
+          - O(disk_volume.options) is a dict of extra options.
+          - The value of any given option must be a string, for example V("1").
+        type: dict
   cores:
     description:
       - Specify number of cores per socket.
-      - This option has no default unless O(proxmox_default_behavior) is set to V(compatibility); then the default is V(1).
     type: int
   cpus:
     description:
       - numbers of allocated cpus for instance
-      - This option has no default unless O(proxmox_default_behavior) is set to V(compatibility); then the default is V(1).
     type: int
   memory:
     description:
       - memory size in MB for instance
-      - This option has no default unless O(proxmox_default_behavior) is set to V(compatibility); then the default is V(512).
     type: int
   swap:
     description:
       - swap memory size in MB for instance
-      - This option has no default unless O(proxmox_default_behavior) is set to V(compatibility); then the default is V(0).
     type: int
   netif:
     description:
@@ -80,10 +114,67 @@ options:
     type: list
     elements: str
     version_added: 2.0.0
+  startup:
+    description:
+      - Specifies the startup order of the container.
+      - Use C(order=#) where C(#) is a non-negative number to define the general startup order. Shutdown in done with reverse ordering.
+      - Use C(up=#) where C(#) is in seconds, to specify a delay to wait before the next VM is started.
+      - Use C(down=#) where C(#) is in seconds, to specify a delay to wait before the next VM is stopped.
+    type: list
+    elements: str
+    version_added: 8.5.0
   mounts:
     description:
-      - specifies additional mounts (separate disks) for the container. As a hash/dictionary defining mount points
+      - Specifies additional mounts (separate disks) for the container. As a hash/dictionary defining mount points as strings.
+      - This Option is mutually exclusive with O(mount_volumes).
     type: dict
+  mount_volumes:
+    description:
+      - Specify additional mounts (separate disks) for the container. As a hash/dictionary defining mount points.
+      - See U(https://pve.proxmox.com/wiki/Linux_Container#pct_mount_points) for a full description.
+      - This Option is mutually exclusive with O(mounts).
+    type: list
+    elements: dict
+    version_added: 9.2.0
+    suboptions:
+      id:
+        description:
+          - O(mount_volumes[].id) is the identifier of the mount point written as C(mp[n]).
+        type: str
+        required: true
+      storage:
+        description:
+          - O(mount_volumes[].storage) is the storage identifier of the storage to use.
+          - Mutually exclusive with O(mount_volumes[].host_path).
+        type: str
+      volume:
+        description:
+          - O(mount_volumes[].volume) is the name of an existing volume.
+          - If not defined, the module will check if one exists. If not, a new volume will be created.
+          - If defined, the volume must exist under that name.
+          - Required only if O(mount_volumes[].storage) is defined and mutually exclusive with O(mount_volumes[].host_path).
+        type: str
+      size:
+        description:
+          - O(mount_volumes[].size) is the size of the storage to use.
+          - The size is given in GB.
+          - Required only if O(mount_volumes[].storage) is defined and mutually exclusive with O(mount_volumes[].host_path).
+        type: int
+      host_path:
+        description:
+          - O(mount_volumes[].host_path) defines a bind or device path on the PVE host to use for the C(rootfs).
+          - Mutually exclusive with O(mount_volumes[].storage), O(mount_volumes[].volume), and O(mount_volumes[].size).
+        type: path
+      mountpoint:
+        description:
+          - O(mount_volumes[].mountpoint) is the mount point of the volume.
+        type: path
+        required: true
+      options:
+        description:
+          - O(mount_volumes[].options) is a dict of extra options.
+          - The value of any given option must be a string, for example V("1").
+        type: dict
   ip_address:
     description:
       - specifies the address the container will be assigned
@@ -91,17 +182,24 @@ options:
   onboot:
     description:
       - specifies whether a VM will be started during system bootup
-      - This option has no default unless O(proxmox_default_behavior) is set to V(compatibility); then the default is V(false).
     type: bool
   storage:
     description:
-      - target storage
+      - Target storage.
+      - This Option is mutually exclusive with O(disk) and O(disk_volume).
     type: str
     default: 'local'
+  ostype:
+    description:
+      - Specifies the C(ostype) of the LXC container.
+      - If set to V(auto), no C(ostype) will be provided on instance creation.
+    choices: ['auto', 'debian', 'devuan', 'ubuntu', 'centos', 'fedora', 'opensuse', 'archlinux', 'alpine', 'gentoo', 'nixos', 'unmanaged']
+    type: str
+    default: 'auto'
+    version_added: 8.1.0
   cpuunits:
     description:
       - CPU weight for a VM
-      - This option has no default unless O(proxmox_default_behavior) is set to V(compatibility); then the default is V(1000).
     type: int
   nameserver:
     description:
@@ -124,6 +222,12 @@ options:
       - timeout for operations
     type: int
     default: 30
+  update:
+    description:
+      - If V(true), the container will be updated with new values.
+    type: bool
+    default: false
+    version_added: 8.1.0
   force:
     description:
       - Forcing operations.
@@ -144,8 +248,9 @@ options:
   state:
     description:
      - Indicate desired state of the instance
+     - V(template) was added in community.general 8.1.0.
     type: str
-    choices: ['present', 'started', 'absent', 'stopped', 'restarted']
+    choices: ['present', 'started', 'absent', 'stopped', 'restarted', 'template']
     default: present
   pubkey:
     description:
@@ -174,25 +279,6 @@ options:
       - The special value V(host) configures the same timezone used by Proxmox host.
     type: str
     version_added: '7.1.0'
-  proxmox_default_behavior:
-    description:
-      - As of community.general 4.0.0, various options no longer have default values.
-        These default values caused problems when users expected different behavior from Proxmox
-        by default or filled options which caused problems when set.
-      - The value V(compatibility) (default before community.general 4.0.0) will ensure that the default values
-        are used when the values are not explicitly specified by the user. The new default is V(no_defaults),
-        which makes sure these options have no defaults.
-      - This affects the O(disk), O(cores), O(cpus), O(memory), O(onboot), O(swap), and O(cpuunits) options.
-      - >
-        This parameter is now B(deprecated) and it will be removed in community.general 10.0.0.
-        By then, the module's behavior should be to not set default values, equivalent to V(no_defaults).
-        If a consistent set of defaults is needed, the playbook or role should be responsible for setting it.
-    type: str
-    default: no_defaults
-    choices:
-      - compatibility
-      - no_defaults
-    version_added: "1.3.0"
   clone:
     description:
       - ID of the container to be cloned.
@@ -216,6 +302,7 @@ author: Sergei Antipov (@UnderGreen)
 seealso:
   - module: community.general.proxmox_vm_info
 extends_documentation_fragment:
+  - community.general.proxmox.actiongroup_proxmox
   - community.general.proxmox.documentation
   - community.general.proxmox.selection
   - community.general.attributes
@@ -232,6 +319,32 @@ EXAMPLES = r'''
     password: 123456
     hostname: example.org
     ostemplate: 'local:vztmpl/ubuntu-14.04-x86_64.tar.gz'
+
+- name: Create new container with minimal options specifying disk storage location and size
+  community.general.proxmox:
+    vmid: 100
+    node: uk-mc02
+    api_user: root@pam
+    api_password: 1q2w3e
+    api_host: node1
+    password: 123456
+    hostname: example.org
+    ostemplate: 'local:vztmpl/ubuntu-14.04-x86_64.tar.gz'
+    disk: 'local-lvm:20'
+
+- name: Create new container with minimal options specifying disk storage location and size via disk_volume
+  community.general.proxmox:
+    vmid: 100
+    node: uk-mc02
+    api_user: root@pam
+    api_password: 1q2w3e
+    api_host: node1
+    password: 123456
+    hostname: example.org
+    ostemplate: 'local:vztmpl/ubuntu-14.04-x86_64.tar.gz'
+    disk_volume:
+      storage: local
+      size: 20
 
 - name: Create new container with hookscript and description
   community.general.proxmox:
@@ -311,8 +424,24 @@ EXAMPLES = r'''
     api_host: node1
     password: 123456
     hostname: example.org
-    ostemplate: local:vztmpl/ubuntu-14.04-x86_64.tar.gz'
+    ostemplate: 'local:vztmpl/ubuntu-14.04-x86_64.tar.gz'
     mounts: '{"mp0":"local:8,mp=/mnt/test/"}'
+
+- name: Create new container with minimal options defining a mount with 8GB using mount_volumes
+  community.general.proxmox:
+    vmid: 100
+    node: uk-mc02
+    api_user: root@pam
+    api_password: 1q2w3e
+    api_host: node1
+    password: 123456
+    hostname: example.org
+    ostemplate: 'local:vztmpl/ubuntu-14.04-x86_64.tar.gz'
+    mount_volumes:
+      - id: mp0
+        storage: local
+        size: 8
+        mountpoint: /mnt/test
 
 - name: Create new container with minimal options defining a cpu core limit
   community.general.proxmox:
@@ -323,7 +452,7 @@ EXAMPLES = r'''
     api_host: node1
     password: 123456
     hostname: example.org
-    ostemplate: local:vztmpl/ubuntu-14.04-x86_64.tar.gz'
+    ostemplate: 'local:vztmpl/ubuntu-14.04-x86_64.tar.gz'
     cores: 2
 
 - name: Create new container with minimal options and same timezone as proxmox host
@@ -347,7 +476,7 @@ EXAMPLES = r'''
     api_host: node1
     password: 123456
     hostname: example.org
-    ostemplate: local:vztmpl/ubuntu-14.04-x86_64.tar.gz'
+    ostemplate: 'local:vztmpl/ubuntu-14.04-x86_64.tar.gz'
     features:
      - nesting=1
      - mount=cifs,nfs
@@ -374,6 +503,16 @@ EXAMPLES = r'''
     clone: 100
     hostname: clone.example.org
     storage: local
+
+- name: Update container configuration
+  community.general.proxmox:
+    vmid: 100
+    node: uk-mc02
+    api_user: root@pam
+    api_password: 1q2w3e
+    api_host: node1
+    netif: '{"net0":"name=eth0,gw=192.168.0.1,ip=192.168.0.3/24,bridge=vmbr0"}'
+    update: true
 
 - name: Start container
   community.general.proxmox:
@@ -419,6 +558,23 @@ EXAMPLES = r'''
     api_host: node1
     state: restarted
 
+- name: Convert container to template
+  community.general.proxmox:
+    vmid: 100
+    api_user: root@pam
+    api_password: 1q2w3e
+    api_host: node1
+    state: template
+
+- name: Convert container to template (stop container if running)
+  community.general.proxmox:
+    vmid: 100
+    api_user: root@pam
+    api_password: 1q2w3e
+    api_host: node1
+    state: template
+    force: true
+
 - name: Remove container
   community.general.proxmox:
     vmid: 100
@@ -434,7 +590,9 @@ import time
 from ansible_collections.community.general.plugins.module_utils.version import LooseVersion
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.common.text.converters import to_native
+from ansible.module_utils.six import string_types
+from ansible.module_utils.common.text.converters import to_native, to_text
+
 
 from ansible_collections.community.general.plugins.module_utils.proxmox import (
     ansible_to_proxmox_bool, proxmox_auth_argument_spec, ProxmoxAnsible)
@@ -451,6 +609,215 @@ class ProxmoxLxcAnsible(ProxmoxAnsible):
         proxmox_node = self.proxmox_api.nodes(node)
         config = getattr(proxmox_node, VZ_TYPE)(vmid).config.get()
         return config.get('template', False)
+
+    def update_config(self, vmid, node, disk, cpus, memory, swap, **kwargs):
+        if VZ_TYPE != "lxc":
+            self.module.fail_json(
+                changed=False,
+                msg="Updating configuration is only supported for LXC enabled proxmox clusters.",
+            )
+
+        def parse_disk_string(disk_string):
+            # Example strings:
+            #  "acl=0,thin1:base-100-disk-1,size=8G"
+            #  "thin1:10,backup=0"
+            #  "local:20"
+            #  "volume=local-lvm:base-100-disk-1,size=20G"
+            #  "/mnt/bindmounts/shared,mp=/shared"
+            #  "volume=/dev/USB01,mp=/mnt/usb01"
+            args = disk_string.split(",")
+            # If the volume is not explicitly defined but implicit by only passing a key,
+            # add the "volume=" key prefix for ease of parsing.
+            args = ["volume=" + arg if "=" not in arg else arg for arg in args]
+            # Then create a dictionary from the arguments
+            disk_kwargs = dict(map(lambda item: item.split("="), args))
+
+            VOLUME_PATTERN = r"""(?x)
+              (?:(?P<storage>[\w\-.]+):
+                (?:(?P<size>\d+)|
+                (?P<volume>[^,\s]+))
+              )|
+              (?P<host_path>[^,\s]+)
+            """
+            # DISCLAIMER:
+            # There are two things called a "volume":
+            # 1. The "volume" key which describes the storage volume, device or directory to mount into the container.
+            # 2. The storage volume of a storage-backed mount point in the PVE storage sub system.
+            # In this section, we parse the "volume" key and check which type of mount point we are dealing with.
+            pattern = re.compile(VOLUME_PATTERN)
+            match_dict = pattern.match(disk_kwargs.pop("volume")).groupdict()
+            match_dict = {k: v for k, v in match_dict.items() if v is not None}
+
+            if "storage" in match_dict and "volume" in match_dict:
+                disk_kwargs["storage"] = match_dict["storage"]
+                disk_kwargs["volume"] = match_dict["volume"]
+            elif "storage" in match_dict and "size" in match_dict:
+                disk_kwargs["storage"] = match_dict["storage"]
+                disk_kwargs["size"] = match_dict["size"]
+            elif "host_path" in match_dict:
+                disk_kwargs["host_path"] = match_dict["host_path"]
+
+            # Pattern matching only available in Python 3.10+
+            # match match_dict:
+            #     case {"storage": storage, "volume": volume}:
+            #         disk_kwargs["storage"] = storage
+            #         disk_kwargs["volume"] = volume
+
+            #     case {"storage": storage, "size": size}:
+            #         disk_kwargs["storage"] = storage
+            #         disk_kwargs["size"] = size
+
+            #     case {"host_path": host_path}:
+            #         disk_kwargs["host_path"] = host_path
+
+            return disk_kwargs
+
+        def convert_mounts(mount_dict):
+            return_list = []
+            for mount_key, mount_value in mount_dict.items():
+                mount_config = parse_disk_string(mount_value)
+                return_list.append(dict(id=mount_key, **mount_config))
+
+            return return_list
+
+        def build_volume(
+            key,
+            storage=None,
+            volume=None,
+            host_path=None,
+            size=None,
+            mountpoint=None,
+            options=None,
+            **kwargs
+        ):
+            if size is not None and isinstance(size, str):
+                size = size.strip("G")
+            # 1. Handle volume checks/creation
+            # 1.1 Check if defined volume exists
+            if volume is not None:
+                storage_content = self.get_storage_content(node, storage, vmid=vmid)
+                vol_ids = [vol["volid"] for vol in storage_content]
+                volid = "{storage}:{volume}".format(storage=storage, volume=volume)
+                if volid not in vol_ids:
+                    self.module.fail_json(
+                        changed=False,
+                        msg="Storage {storage} does not contain volume {volume}".format(
+                            storage=storage,
+                            volume=volume,
+                        ),
+                    )
+                vol_string = "{storage}:{volume},size={size}G".format(
+                    storage=storage, volume=volume, size=size
+                )
+            # 1.2 If volume not defined (but storage is), check if it exists
+            elif storage is not None:
+                api_node = self.proxmox_api.nodes(
+                    node
+                )  # The node must exist, but not the LXC
+                try:
+                    vol = api_node.lxc(vmid).get("config").get(key)
+                    volume = parse_disk_string(vol).get("volume")
+                    vol_string = "{storage}:{volume},size={size}G".format(
+                        storage=storage, volume=volume, size=size
+                    )
+
+                # If not, we have proxmox create one using the special syntax
+                except Exception:
+                    vol_string = "{storage}:{size}".format(storage=storage, size=size)
+
+            # 1.3 If we have a host_path, we don't have storage, a volume, or a size
+            vol_string = ",".join(
+                ([] if host_path is None else [host_path]) +
+                ([] if mountpoint is None else ["mp={0}".format(mountpoint)]) +
+                ([] if options is None else [map("=".join, options.items())]) +
+                ([] if not kwargs else [map("=".join, kwargs.items())])
+            )
+
+            return {key: vol_string}
+
+        # Version limited features
+        minimum_version = {"tags": "6.1", "timezone": "6.3"}
+        proxmox_node = self.proxmox_api.nodes(node)
+
+        pve_version = self.version()
+
+        # Fail on unsupported features
+        for option, version in minimum_version.items():
+            if pve_version < LooseVersion(version) and option in kwargs:
+                self.module.fail_json(
+                    changed=False,
+                    msg="Feature {option} is only supported in PVE {version}+, and you're using PVE {pve_version}".format(
+                        option=option, version=version, pve_version=pve_version
+                    ),
+                )
+
+        # Remove all empty kwarg entries
+        kwargs = dict((key, val) for key, val in kwargs.items() if val is not None)
+
+        if cpus is not None:
+            kwargs["cpulimit"] = cpus
+        if disk is not None:
+            kwargs["disk_volume"] = parse_disk_string(disk)
+        if "disk_volume" in kwargs:
+            if not all(isinstance(val, string_types) for val in kwargs["disk_volume"].values()):
+                self.module.warn("All disk_volume values must be strings. Converting non-string values to strings.")
+                kwargs["disk_volume"] = {key: to_text(val) for key, val in kwargs["disk_volume"].items()}
+            disk_dict = build_volume(key="rootfs", **kwargs.pop("disk_volume"))
+            kwargs.update(disk_dict)
+        if memory is not None:
+            kwargs["memory"] = memory
+        if swap is not None:
+            kwargs["swap"] = swap
+        if "netif" in kwargs:
+            kwargs.update(kwargs.pop("netif"))
+        if "mounts" in kwargs:
+            kwargs["mount_volumes"] = convert_mounts(kwargs.pop("mounts"))
+        if "mount_volumes" in kwargs:
+            mounts_list = kwargs.pop("mount_volumes")
+            for mount_config in mounts_list:
+                if not all(isinstance(val, string_types) for val in mount_config.values()):
+                    self.module.warn("All mount_volumes values must be strings. Converting non-string values to strings.")
+                    mount_config = {key: to_text(val) for key, val in mount_config.items()}
+                key = mount_config.pop("id")
+                mount_dict = build_volume(key=key, **mount_config)
+                kwargs.update(mount_dict)
+        # LXC tags are expected to be valid and presented as a comma/semi-colon delimited string
+        if "tags" in kwargs:
+            re_tag = re.compile(r"^[a-z0-9_][a-z0-9_\-\+\.]*$")
+            for tag in kwargs["tags"]:
+                if not re_tag.match(tag):
+                    self.module.fail_json(msg="%s is not a valid tag" % tag)
+            kwargs["tags"] = ",".join(kwargs["tags"])
+
+        # fetch the current config
+        current_config = getattr(proxmox_node, VZ_TYPE)(vmid).config.get()
+
+        # compare the requested config against the current
+        update_config = False
+        for (arg, value) in kwargs.items():
+            # if the arg isn't in the current config, it needs to be updated
+            if arg not in current_config:
+                update_config = True
+                break
+            # some values are lists, the order isn't always the same, so split them and compare by key
+            if isinstance(value, str):
+                current_values = current_config[arg].split(",")
+                requested_values = value.split(",")
+                for new_value in requested_values:
+                    if new_value not in current_values:
+                        update_config = True
+                        break
+            # if it's not a list (or string) just compare the current value
+            else:
+                # some types don't match with the API, so forcing to string for comparison
+                if str(value) != str(current_config[arg]):
+                    update_config = True
+                    break
+
+        if update_config:
+            getattr(proxmox_node, VZ_TYPE)(vmid).config.put(vmid=vmid, node=node, **kwargs)
+        else:
+            self.module.exit_json(changed=False, msg="Container config is already up to date")
 
     def create_instance(self, vmid, node, disk, storage, cpus, memory, swap, timeout, clone, **kwargs):
 
@@ -496,6 +863,9 @@ class ProxmoxLxcAnsible(ProxmoxAnsible):
                 if not re_tag.match(tag):
                     self.module.fail_json(msg='%s is not a valid tag' % tag)
             kwargs['tags'] = ",".join(kwargs['tags'])
+
+        if kwargs.get('ostype') == 'auto':
+            kwargs.pop('ostype')
 
         if clone is not None:
             if VZ_TYPE != 'lxc':
@@ -581,6 +951,13 @@ class ProxmoxLxcAnsible(ProxmoxAnsible):
             time.sleep(1)
         return False
 
+    def convert_to_template(self, vm, vmid, timeout, force):
+        if getattr(self.proxmox_api.nodes(vm['node']), VZ_TYPE)(vmid).status.current.get()['status'] == 'running' and force:
+            self.stop_instance(vm, vmid, timeout, force)
+        # not sure why, but templating a container doesn't return a taskid
+        getattr(self.proxmox_api.nodes(vm['node']), VZ_TYPE)(vmid).template.post()
+        return True
+
     def umount_instance(self, vm, vmid, timeout):
         taskid = getattr(self.proxmox_api.nodes(vm['node']), VZ_TYPE)(vmid).status.umount.post()
         while timeout:
@@ -605,30 +982,74 @@ def main():
         hostname=dict(),
         ostemplate=dict(),
         disk=dict(type='str'),
+        disk_volume=dict(
+            type="dict",
+            options=dict(
+                storage=dict(type="str"),
+                volume=dict(type="str"),
+                size=dict(type="int"),
+                host_path=dict(type="path"),
+                options=dict(type="dict"),
+            ),
+            required_together=[("storage", "size")],
+            required_by={
+                "volume": ("storage", "size"),
+            },
+            mutually_exclusive=[
+                ("host_path", "storage"),
+                ("host_path", "volume"),
+                ("host_path", "size"),
+            ],
+        ),
         cores=dict(type='int'),
         cpus=dict(type='int'),
         memory=dict(type='int'),
         swap=dict(type='int'),
         netif=dict(type='dict'),
         mounts=dict(type='dict'),
+        mount_volumes=dict(
+            type="list",
+            elements="dict",
+            options=dict(
+                id=(dict(type="str", required=True)),
+                storage=dict(type="str"),
+                volume=dict(type="str"),
+                size=dict(type="int"),
+                host_path=dict(type="path"),
+                mountpoint=dict(type="path", required=True),
+                options=dict(type="dict"),
+            ),
+            required_together=[("storage", "size")],
+            required_by={
+                "volume": ("storage", "size"),
+            },
+            mutually_exclusive=[
+                ("host_path", "storage"),
+                ("host_path", "volume"),
+                ("host_path", "size"),
+            ],
+        ),
         ip_address=dict(),
+        ostype=dict(default='auto', choices=[
+            'auto', 'debian', 'devuan', 'ubuntu', 'centos', 'fedora', 'opensuse', 'archlinux', 'alpine', 'gentoo', 'nixos', 'unmanaged'
+        ]),
         onboot=dict(type='bool'),
         features=dict(type='list', elements='str'),
+        startup=dict(type='list', elements='str'),
         storage=dict(default='local'),
         cpuunits=dict(type='int'),
         nameserver=dict(),
         searchdomain=dict(),
         timeout=dict(type='int', default=30),
+        update=dict(type='bool', default=False),
         force=dict(type='bool', default=False),
         purge=dict(type='bool', default=False),
-        state=dict(default='present', choices=['present', 'absent', 'stopped', 'started', 'restarted']),
+        state=dict(default='present', choices=['present', 'absent', 'stopped', 'started', 'restarted', 'template']),
         pubkey=dict(type='str'),
         unprivileged=dict(type='bool', default=True),
         description=dict(type='str'),
         hookscript=dict(type='str'),
         timezone=dict(type='str'),
-        proxmox_default_behavior=dict(type='str', default='no_defaults', choices=['compatibility', 'no_defaults'],
-                                      removed_in_version='9.0.0', removed_from_collection='community.general'),
         clone=dict(type='int'),
         clone_type=dict(default='opportunistic', choices=['full', 'linked', 'opportunistic']),
         tags=dict(type='list', elements='str')
@@ -639,14 +1060,21 @@ def main():
         argument_spec=module_args,
         required_if=[
             ('state', 'present', ['node', 'hostname']),
-            ('state', 'present', ('clone', 'ostemplate'), True),  # Require one of clone and ostemplate. Together with mutually_exclusive this ensures that we
-                                                                  # either clone a container or create a new one from a template file.
+            # Require one of clone, ostemplate, or update. Together with mutually_exclusive this ensures that we
+            # either clone a container or create a new one from a template file.
+            ('state', 'present', ('clone', 'ostemplate', 'update'), True),
         ],
-        required_together=[
-            ('api_token_id', 'api_token_secret')
+        required_together=[("api_token_id", "api_token_secret")],
+        required_one_of=[("api_password", "api_token_id")],
+        mutually_exclusive=[
+            (
+                "clone",
+                "ostemplate",
+                "update",
+            ),  # Creating a new container is done either by cloning an existing one, or based on a template.
+            ("disk", "disk_volume", "storage"),
+            ("mounts", "mount_volumes"),
         ],
-        required_one_of=[('api_password', 'api_token_id')],
-        mutually_exclusive=[('clone', 'ostemplate')],  # Creating a new container is done either by cloning an existing one, or based on a template.
     )
 
     proxmox = ProxmoxLxcAnsible(module)
@@ -668,20 +1096,6 @@ def main():
     timeout = module.params['timeout']
     clone = module.params['clone']
 
-    if module.params['proxmox_default_behavior'] == 'compatibility':
-        old_default_values = dict(
-            disk="3",
-            cores=1,
-            cpus=1,
-            memory=512,
-            swap=0,
-            onboot=False,
-            cpuunits=1000,
-        )
-        for param, value in old_default_values.items():
-            if module.params[param] is None:
-                module.params[param] = value
-
     # If vmid not set get the Next VM id from ProxmoxAPI
     # If hostname is set get the VM id from ProxmoxAPI
     if not vmid and state == 'present':
@@ -694,8 +1108,48 @@ def main():
     # Create a new container
     if state == 'present' and clone is None:
         try:
-            if proxmox.get_vm(vmid, ignore_missing=True) and not module.params['force']:
-                module.exit_json(changed=False, vmid=vmid, msg="VM with vmid = %s is already exists" % vmid)
+            if proxmox.get_vm(vmid, ignore_missing=True):
+                if module.params["update"]:
+                    try:
+                        proxmox.update_config(vmid, node, disk, cpus, memory, swap,
+                                              cores=module.params["cores"],
+                                              hostname=module.params["hostname"],
+                                              netif=module.params["netif"],
+                                              disk_volume=module.params["disk_volume"],
+                                              mounts=module.params["mounts"],
+                                              mount_volumes=module.params["mount_volumes"],
+                                              ip_address=module.params["ip_address"],
+                                              onboot=ansible_to_proxmox_bool(module.params["onboot"]),
+                                              cpuunits=module.params["cpuunits"],
+                                              nameserver=module.params["nameserver"],
+                                              searchdomain=module.params["searchdomain"],
+                                              features=",".join(module.params["features"])
+                                              if module.params["features"] is not None
+                                              else None,
+                                              startup=",".join(module.params["startup"])
+                                              if module.params["startup"] is not None
+                                              else None,
+                                              description=module.params["description"],
+                                              hookscript=module.params["hookscript"],
+                                              timezone=module.params["timezone"],
+                                              tags=module.params["tags"])
+                        module.exit_json(
+                            changed=True,
+                            vmid=vmid,
+                            msg="Configured VM %s" % (vmid),
+                        )
+                    except Exception as e:
+                        module.fail_json(
+                            vmid=vmid,
+                            msg="Configuration of %s VM %s failed with exception: %s"
+                            % (VZ_TYPE, vmid, e),
+                        )
+                if not module.params["force"]:
+                    module.exit_json(
+                        changed=False,
+                        vmid=vmid,
+                        msg="VM with vmid = %s is already exists" % vmid,
+                    )
             # If no vmid was passed, there cannot be another VM named 'hostname'
             if (not module.params['vmid'] and
                     proxmox.get_vmid(hostname, ignore_missing=True) and
@@ -718,7 +1172,10 @@ def main():
                                     hostname=module.params['hostname'],
                                     ostemplate=module.params['ostemplate'],
                                     netif=module.params['netif'],
+                                    disk_volume=module.params["disk_volume"],
                                     mounts=module.params['mounts'],
+                                    mount_volumes=module.params["mount_volumes"],
+                                    ostype=module.params['ostype'],
                                     ip_address=module.params['ip_address'],
                                     onboot=ansible_to_proxmox_bool(module.params['onboot']),
                                     cpuunits=module.params['cpuunits'],
@@ -727,6 +1184,7 @@ def main():
                                     force=ansible_to_proxmox_bool(module.params['force']),
                                     pubkey=module.params['pubkey'],
                                     features=",".join(module.params['features']) if module.params['features'] is not None else None,
+                                    startup=",".join(module.params['startup']) if module.params['startup'] is not None else None,
                                     unprivileged=ansible_to_proxmox_bool(module.params['unprivileged']),
                                     description=module.params['description'],
                                     hookscript=module.params['hookscript'],
@@ -790,6 +1248,15 @@ def main():
                 module.exit_json(changed=True, vmid=vmid, msg="VM %s is shutting down" % vmid)
         except Exception as e:
             module.fail_json(vmid=vmid, msg="stopping of VM %s failed with exception: %s" % (vmid, e))
+
+    elif state == 'template':
+        try:
+            vm = proxmox.get_vm(vmid)
+
+            proxmox.convert_to_template(vm, vmid, timeout, force=module.params['force'])
+            module.exit_json(changed=True, msg="VM %s is converted to template" % vmid)
+        except Exception as e:
+            module.fail_json(vmid=vmid, msg="conversion of VM %s to template failed with exception: %s" % (vmid, e))
 
     elif state == 'restarted':
         try:

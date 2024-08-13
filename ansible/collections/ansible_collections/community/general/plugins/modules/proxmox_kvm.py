@@ -21,6 +21,8 @@ attributes:
     support: none
   diff_mode:
     support: none
+  action_group:
+    version_added: 9.0.0
 options:
   archive:
     description:
@@ -172,6 +174,7 @@ options:
       - Allow to force stop VM.
       - Can be used with states V(stopped), V(restarted), and V(absent).
       - This option has no default unless O(proxmox_default_behavior) is set to V(compatibility); then the default is V(false).
+      - Requires parameter O(archive).
     type: bool
   format:
     description:
@@ -196,6 +199,11 @@ options:
       - Used only with clone
     type: bool
     default: true
+  hookscript:
+    description:
+      - Script that will be executed during various steps in the containers lifetime.
+    type: str
+    version_added: 8.1.0
   hostpci:
     description:
       - Specify a hash/dictionary of map host pci devices into guest. O(hostpci='{"key":"value", "key":"value"}').
@@ -453,8 +461,9 @@ options:
     description:
       - Indicates desired state of the instance.
       - If V(current), the current state of the VM will be fetched. You can access it with C(results.status)
+      - V(template) was added in community.general 8.1.0.
     type: str
-    choices: ['present', 'started', 'absent', 'stopped', 'restarted', 'current']
+    choices: ['present', 'started', 'absent', 'stopped', 'restarted', 'current', 'template']
     default: present
   storage:
     description:
@@ -511,14 +520,32 @@ options:
         default: '2.0'
     type: dict
     version_added: 7.1.0
+  usb:
+    description:
+      - A hash/dictionary of USB devices for the VM. O(usb='{"key":"value", "key":"value"}').
+      - Keys allowed are - C(usb[n]) where 0 ≤ n ≤ N.
+      - Values allowed are - C(host="value|spice",mapping="value",usb3="1|0").
+      - host is either C(spice) or the USB id/port.
+      - Option C(mapping) is the mapped USB device name.
+      - Option C(usb3) enables USB 3 support.
+    type: dict
+    version_added: 9.0.0
   update:
     description:
       - If V(true), the VM will be updated with new value.
       - Because of the operations of the API and security reasons, I have disabled the update of the following parameters
         O(net), O(virtio), O(ide), O(sata), O(scsi). Per example updating O(net) update the MAC address and C(virtio) create always new disk...
+        This security feature can be disabled by setting the O(update_unsafe) to V(true).
       - Update of O(pool) is disabled. It needs an additional API endpoint not covered by this module.
     type: bool
     default: false
+  update_unsafe:
+    description:
+      - If V(true), do not enforce limitations on parameters O(net), O(virtio), O(ide), O(sata), O(scsi), O(efidisk0), and O(tpmstate0).
+        Use this option with caution because an improper configuration might result in a permanent loss of data (e.g. disk recreated).
+    type: bool
+    default: false
+    version_added: 8.4.0
   vcpus:
     description:
       - Sets number of hotplugged vcpus.
@@ -565,6 +592,7 @@ options:
 seealso:
   - module: community.general.proxmox_vm_info
 extends_documentation_fragment:
+  - community.general.proxmox.actiongroup_proxmox
   - community.general.proxmox.documentation
   - community.general.proxmox.selection
   - community.general.attributes
@@ -792,6 +820,25 @@ EXAMPLES = '''
     node: sabrewulf
     state: restarted
 
+- name: Convert VM to template
+  community.general.proxmox_kvm:
+    api_user: root@pam
+    api_password: secret
+    api_host: helldorado
+    name: spynal
+    node: sabrewulf
+    state: template
+
+- name: Convert VM to template (stop VM if running)
+  community.general.proxmox_kvm:
+    api_user: root@pam
+    api_password: secret
+    api_host: helldorado
+    name: spynal
+    node: sabrewulf
+    state: template
+    force: true
+
 - name: Remove VM
   community.general.proxmox_kvm:
     api_user: root@pam
@@ -821,6 +868,20 @@ EXAMPLES = '''
     memory: 16384
     update: true
 
+- name: Update VM configuration (incl. unsafe options)
+  community.general.proxmox_kvm:
+    api_user: root@pam
+    api_password: secret
+    api_host: helldorado
+    name: spynal
+    node: sabrewulf
+    cores: 8
+    memory: 16384
+    net:
+        net0: virtio,bridge=vmbr1
+    update: true
+    update_unsafe: true
+
 - name: Delete QEMU parameters
   community.general.proxmox_kvm:
     api_user: root@pam
@@ -847,6 +908,17 @@ EXAMPLES = '''
     name: spynal
     node: sabrewulf-2
     migrate: true
+
+- name: Add hookscript to existing VM
+  community.general.proxmox_kvm:
+    api_user: root@pam
+    api_password: secret
+    api_host: helldorado
+    vmid: 999
+    node: sabrewulf
+    hookscript: local:snippets/hookscript.pl
+    update: true
+
 '''
 
 RETURN = '''
@@ -945,7 +1017,7 @@ class ProxmoxKvmAnsible(ProxmoxAnsible):
             time.sleep(1)
         return False
 
-    def create_vm(self, vmid, newid, node, name, memory, cpu, cores, sockets, update, **kwargs):
+    def create_vm(self, vmid, newid, node, name, memory, cpu, cores, sockets, update, update_unsafe, **kwargs):
         # Available only in PVE 4
         only_v4 = ['force', 'protection', 'skiplock']
         only_v6 = ['ciuser', 'cipassword', 'sshkeys', 'ipconfig', 'tags']
@@ -982,23 +1054,24 @@ class ProxmoxKvmAnsible(ProxmoxAnsible):
             urlencoded_ssh_keys = quote(kwargs['sshkeys'], safe='')
             kwargs['sshkeys'] = str(urlencoded_ssh_keys)
 
-        # If update, don't update disk (virtio, efidisk0, tpmstate0, ide, sata, scsi) and network interface
+        # If update, don't update disk (virtio, efidisk0, tpmstate0, ide, sata, scsi) and network interface, unless update_unsafe=True
         # pool parameter not supported by qemu/<vmid>/config endpoint on "update" (PVE 6.2) - only with "create"
         if update:
-            if 'virtio' in kwargs:
-                del kwargs['virtio']
-            if 'sata' in kwargs:
-                del kwargs['sata']
-            if 'scsi' in kwargs:
-                del kwargs['scsi']
-            if 'ide' in kwargs:
-                del kwargs['ide']
-            if 'efidisk0' in kwargs:
-                del kwargs['efidisk0']
-            if 'tpmstate0' in kwargs:
-                del kwargs['tpmstate0']
-            if 'net' in kwargs:
-                del kwargs['net']
+            if update_unsafe is False:
+                if 'virtio' in kwargs:
+                    del kwargs['virtio']
+                if 'sata' in kwargs:
+                    del kwargs['sata']
+                if 'scsi' in kwargs:
+                    del kwargs['scsi']
+                if 'ide' in kwargs:
+                    del kwargs['ide']
+                if 'efidisk0' in kwargs:
+                    del kwargs['efidisk0']
+                if 'tpmstate0' in kwargs:
+                    del kwargs['tpmstate0']
+                if 'net' in kwargs:
+                    del kwargs['net']
             if 'force' in kwargs:
                 del kwargs['force']
             if 'pool' in kwargs:
@@ -1032,7 +1105,7 @@ class ProxmoxKvmAnsible(ProxmoxAnsible):
             )
 
         # Convert all dict in kwargs to elements.
-        # For hostpci[n], ide[n], net[n], numa[n], parallel[n], sata[n], scsi[n], serial[n], virtio[n], ipconfig[n]
+        # For hostpci[n], ide[n], net[n], numa[n], parallel[n], sata[n], scsi[n], serial[n], virtio[n], ipconfig[n], usb[n]
         for k in list(kwargs.keys()):
             if isinstance(kwargs[k], dict):
                 kwargs.update(kwargs[k])
@@ -1135,6 +1208,19 @@ class ProxmoxKvmAnsible(ProxmoxAnsible):
             self.module.fail_json(vmid=vmid, msg="restarting of VM %s failed with exception: %s" % (vmid, e))
             return False
 
+    def convert_to_template(self, vm, timeout, force):
+        vmid = vm['vmid']
+        try:
+            proxmox_node = self.proxmox_api.nodes(vm['node'])
+            if proxmox_node.qemu(vmid).status.current.get()['status'] == 'running' and force:
+                self.stop_instance(vm, vmid, timeout, force)
+            # not sure why, but templating a container doesn't return a taskid
+            proxmox_node.qemu(vmid).template.post()
+            return True
+        except Exception as e:
+            self.module.fail_json(vmid=vmid, msg="conversion of VM %s to template failed with exception: %s" % (vmid, e))
+            return False
+
     def migrate_vm(self, vm, target_node):
         vmid = vm['vmid']
         proxmox_node = self.proxmox_api.nodes(vm['node'])
@@ -1181,6 +1267,7 @@ def main():
         format=dict(type='str', choices=['cloop', 'cow', 'qcow', 'qcow2', 'qed', 'raw', 'vmdk', 'unspecified']),
         freeze=dict(type='bool'),
         full=dict(type='bool', default=True),
+        hookscript=dict(type='str'),
         hostpci=dict(type='dict'),
         hotplug=dict(type='str'),
         hugepages=dict(choices=['any', '2', '1024']),
@@ -1222,7 +1309,7 @@ def main():
         sshkeys=dict(type='str', no_log=False),
         startdate=dict(type='str'),
         startup=dict(),
-        state=dict(default='present', choices=['present', 'absent', 'stopped', 'started', 'restarted', 'current']),
+        state=dict(default='present', choices=['present', 'absent', 'stopped', 'started', 'restarted', 'current', 'template']),
         storage=dict(type='str'),
         tablet=dict(type='bool'),
         tags=dict(type='list', elements='str'),
@@ -1235,7 +1322,9 @@ def main():
                            storage=dict(type='str', required=True),
                            version=dict(type='str', choices=['2.0', '1.2'], default='2.0')
                        )),
+        usb=dict(type='dict'),
         update=dict(type='bool', default=False),
+        update_unsafe=dict(type='bool', default=False),
         vcpus=dict(type='int'),
         vga=dict(choices=['std', 'cirrus', 'vmware', 'qxl', 'serial0', 'serial1', 'serial2', 'serial3', 'qxl2', 'qxl3', 'qxl4']),
         virtio=dict(type='dict'),
@@ -1270,6 +1359,7 @@ def main():
     sockets = module.params['sockets']
     state = module.params['state']
     update = bool(module.params['update'])
+    update_unsafe = bool(module.params['update_unsafe'])
     vmid = module.params['vmid']
     validate_certs = module.params['validate_certs']
 
@@ -1379,7 +1469,7 @@ def main():
             module.fail_json(msg="node '%s' does not exist in cluster" % node)
 
         try:
-            proxmox.create_vm(vmid, newid, node, name, memory, cpu, cores, sockets, update,
+            proxmox.create_vm(vmid, newid, node, name, memory, cpu, cores, sockets, update, update_unsafe,
                               archive=module.params['archive'],
                               acpi=module.params['acpi'],
                               agent=module.params['agent'],
@@ -1399,6 +1489,7 @@ def main():
                               efidisk0=module.params['efidisk0'],
                               force=module.params['force'],
                               freeze=module.params['freeze'],
+                              hookscript=module.params['hookscript'],
                               hostpci=module.params['hostpci'],
                               hotplug=module.params['hotplug'],
                               hugepages=module.params['hugepages'],
@@ -1437,6 +1528,7 @@ def main():
                               tdf=module.params['tdf'],
                               template=module.params['template'],
                               tpmstate0=module.params['tpmstate0'],
+                              usb=module.params['usb'],
                               vcpus=module.params['vcpus'],
                               vga=module.params['vga'],
                               virtio=module.params['virtio'],
@@ -1471,8 +1563,9 @@ def main():
         status = {}
         try:
             vm = proxmox.get_vm(vmid)
-            status['status'] = vm['status']
-            if vm['status'] == 'running':
+            current = proxmox.proxmox_api.nodes(vm['node']).qemu(vmid).status.current.get()['status']
+            status['status'] = current
+            if current == 'running':
                 module.exit_json(changed=False, vmid=vmid, msg="VM %s is already running" % vmid, **status)
 
             if proxmox.start_vm(vm):
@@ -1487,15 +1580,31 @@ def main():
         status = {}
         try:
             vm = proxmox.get_vm(vmid)
-
-            status['status'] = vm['status']
-            if vm['status'] == 'stopped':
+            current = proxmox.proxmox_api.nodes(vm['node']).qemu(vmid).status.current.get()['status']
+            status['status'] = current
+            if current == 'stopped':
                 module.exit_json(changed=False, vmid=vmid, msg="VM %s is already stopped" % vmid, **status)
 
-            if proxmox.stop_vm(vm, force=module.params['force'], timeout=module.params['timeout']):
-                module.exit_json(changed=True, vmid=vmid, msg="VM %s is shutting down" % vmid, **status)
+            proxmox.stop_vm(vm, force=module.params['force'], timeout=module.params['timeout'])
+            module.exit_json(changed=True, vmid=vmid, msg="VM %s is shutting down" % vmid, **status)
         except Exception as e:
             module.fail_json(vmid=vmid, msg="stopping of VM %s failed with exception: %s" % (vmid, e), **status)
+
+    elif state == 'template':
+        if not vmid:
+            module.fail_json(msg='VM with name = %s does not exist in cluster' % name)
+
+        status = {}
+        try:
+            vm = proxmox.get_vm(vmid)
+
+            if vm['template'] == 1:
+                module.exit_json(changed=False, vmid=vmid, msg="VM %s is already a template" % vmid, **status)
+
+            if proxmox.convert_to_template(vm, force=module.params['force'], timeout=module.params['timeout']):
+                module.exit_json(changed=True, vmid=vmid, msg="VM %s is converting to template" % vmid, **status)
+        except Exception as e:
+            module.fail_json(vmid=vmid, msg="conversion of VM %s to template failed with exception: %s" % (vmid, e), **status)
 
     elif state == 'restarted':
         if not vmid:
@@ -1503,8 +1612,9 @@ def main():
 
         status = {}
         vm = proxmox.get_vm(vmid)
-        status['status'] = vm['status']
-        if vm['status'] == 'stopped':
+        current = proxmox.proxmox_api.nodes(vm['node']).qemu(vmid).status.current.get()['status']
+        status['status'] = current
+        if current == 'stopped':
             module.exit_json(changed=False, vmid=vmid, msg="VM %s is not running" % vmid, **status)
 
         if proxmox.restart_vm(vm, force=module.params['force']):
@@ -1521,8 +1631,9 @@ def main():
                 module.exit_json(changed=False, vmid=vmid)
 
             proxmox_node = proxmox.proxmox_api.nodes(vm['node'])
-            status['status'] = vm['status']
-            if vm['status'] == 'running':
+            current = proxmox_node.qemu(vmid).status.current.get()['status']
+            status['status'] = current
+            if current == 'running':
                 if module.params['force']:
                     proxmox.stop_vm(vm, True, timeout=module.params['timeout'])
                 else:

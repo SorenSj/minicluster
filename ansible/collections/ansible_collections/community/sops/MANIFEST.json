@@ -2,7 +2,7 @@
  "collection_info": {
   "namespace": "community",
   "name": "sops",
-  "version": "1.6.0",
+  "version": "1.8.1",
   "authors": [
    "Edoardo Tenani"
   ],
@@ -14,7 +14,7 @@
    "secret",
    "vault"
   ],
-  "description": "Support usage of mozilla/sops from your Ansible playbooks",
+  "description": "Support usage of SOPS (getsops/sops) from your Ansible playbooks",
   "license": [
    "GPL-3.0-or-later",
    "BSD-2-Clause"
@@ -30,7 +30,7 @@
   "name": "FILES.json",
   "ftype": "file",
   "chksum_type": "sha256",
-  "chksum_sha256": "00045b59652c7d4d317ef1f26b4e98da121eb82114bcff1439455bee68c1e830",
+  "chksum_sha256": "41c778fbce81451ca03426ab2fdaf72213e2bc04f8c9a1466e805f9017bd834f",
   "format": 1
  },
  "format": 1

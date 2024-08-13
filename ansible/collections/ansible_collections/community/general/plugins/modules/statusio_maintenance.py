@@ -188,6 +188,10 @@ from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.common.text.converters import to_native
 from ansible.module_utils.urls import open_url
 
+from ansible_collections.community.general.plugins.module_utils.datetime import (
+    now,
+)
+
 
 def get_api_auth_headers(api_id, api_key, url, statuspage):
 
@@ -270,11 +274,11 @@ def get_date_time(start_date, start_time, minutes):
         except (NameError, ValueError):
             return 1, None, "Couldn't work out a valid date"
     else:
-        now = datetime.datetime.utcnow()
-        delta = now + datetime.timedelta(minutes=minutes)
+        now_t = now()
+        delta = now_t + datetime.timedelta(minutes=minutes)
         # start_date
-        returned_date.append(now.strftime("%m/%d/%Y"))
-        returned_date.append(now.strftime("%H:%M"))
+        returned_date.append(now_t.strftime("%m/%d/%Y"))
+        returned_date.append(now_t.strftime("%H:%M"))
         # end_date
         returned_date.append(delta.strftime("%m/%d/%Y"))
         returned_date.append(delta.strftime("%H:%M"))
@@ -286,25 +290,24 @@ def create_maintenance(auth_headers, url, statuspage, host_ids,
                        returned_date, maintenance_notify_now,
                        maintenance_notify_72_hr, maintenance_notify_24_hr,
                        maintenance_notify_1_hr):
-    returned_dates = [[x] for x in returned_date]
     component_id = []
     container_id = []
     for val in host_ids:
         component_id.append(val['component_id'])
         container_id.append(val['container_id'])
+    infrastructure_id = [i + '-' + j for i, j in zip(component_id, container_id)]
     try:
         values = json.dumps({
             "statuspage_id": statuspage,
-            "components": component_id,
-            "containers": container_id,
             "all_infrastructure_affected": str(int(all_infrastructure_affected)),
+            "infrastructure_affected": infrastructure_id,
             "automation": str(int(automation)),
             "maintenance_name": title,
             "maintenance_details": desc,
-            "date_planned_start": returned_dates[0],
-            "time_planned_start": returned_dates[1],
-            "date_planned_end": returned_dates[2],
-            "time_planned_end": returned_dates[3],
+            "date_planned_start": returned_date[0],
+            "time_planned_start": returned_date[1],
+            "date_planned_end": returned_date[2],
+            "time_planned_end": returned_date[3],
             "maintenance_notify_now": str(int(maintenance_notify_now)),
             "maintenance_notify_72_hr": str(int(maintenance_notify_72_hr)),
             "maintenance_notify_24_hr": str(int(maintenance_notify_24_hr)),

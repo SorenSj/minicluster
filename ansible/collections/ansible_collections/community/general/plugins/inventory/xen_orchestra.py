@@ -84,6 +84,7 @@ from ansible.errors import AnsibleError
 from ansible.plugins.inventory import BaseInventoryPlugin, Constructable, Cacheable
 
 from ansible_collections.community.general.plugins.module_utils.version import LooseVersion
+from ansible_collections.community.general.plugins.plugin_utils.unsafe import make_unsafe
 
 # 3rd party imports
 try:
@@ -347,4 +348,4 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
             self.protocol = 'ws'
 
         objects = self._get_objects()
-        self._populate(objects)
+        self._populate(make_unsafe(objects))

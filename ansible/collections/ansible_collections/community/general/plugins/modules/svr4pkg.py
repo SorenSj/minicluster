@@ -56,7 +56,7 @@ options:
     type: str
   response_file:
     description:
-      - Specifies the location of a response file to be used if package expects input on install. (added in Ansible 1.4)
+      - Specifies the location of a response file to be used if package expects input on install.
     required: false
     type: str
   zone:
@@ -120,7 +120,7 @@ def package_installed(module, name, category):
     if category:
         cmd.append('-c')
     cmd.append(name)
-    rc, out, err = module.run_command(' '.join(cmd))
+    rc, out, err = module.run_command(cmd)
     if rc == 0:
         return True
     else:

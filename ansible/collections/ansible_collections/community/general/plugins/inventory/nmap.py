@@ -127,6 +127,8 @@ from ansible.module_utils.common.text.converters import to_native, to_text
 from ansible.plugins.inventory import BaseInventoryPlugin, Constructable, Cacheable
 from ansible.module_utils.common.process import get_bin_path
 
+from ansible_collections.community.general.plugins.plugin_utils.unsafe import make_unsafe
+
 
 class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
 
@@ -143,6 +145,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         strict = self.get_option('strict')
 
         for host in hosts:
+            host = make_unsafe(host)
             hostname = host['name']
             self.inventory.add_host(hostname)
             for var, value in host.items():

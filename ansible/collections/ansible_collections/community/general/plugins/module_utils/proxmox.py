@@ -29,6 +29,9 @@ def proxmox_auth_argument_spec():
                       required=True,
                       fallback=(env_fallback, ['PROXMOX_HOST'])
                       ),
+        api_port=dict(type='int',
+                      fallback=(env_fallback, ['PROXMOX_PORT'])
+                      ),
         api_user=dict(type='str',
                       required=True,
                       fallback=(env_fallback, ['PROXMOX_USER'])
@@ -82,6 +85,7 @@ class ProxmoxAnsible(object):
 
     def _connect(self):
         api_host = self.module.params['api_host']
+        api_port = self.module.params['api_port']
         api_user = self.module.params['api_user']
         api_password = self.module.params['api_password']
         api_token_id = self.module.params['api_token_id']
@@ -89,6 +93,10 @@ class ProxmoxAnsible(object):
         validate_certs = self.module.params['validate_certs']
 
         auth_args = {'user': api_user}
+
+        if api_port:
+            auth_args['port'] = api_port
+
         if api_password:
             auth_args['password'] = api_password
         else:
@@ -180,3 +188,17 @@ class ProxmoxAnsible(object):
             return self.proxmox_api.storage.get(type=type)
         except Exception as e:
             self.module.fail_json(msg="Unable to retrieve storages information with type %s: %s" % (type, e))
+
+    def get_storage_content(self, node, storage, content=None, vmid=None):
+        try:
+            return (
+                self.proxmox_api.nodes(node)
+                .storage(storage)
+                .content()
+                .get(content=content, vmid=vmid)
+            )
+        except Exception as e:
+            self.module.fail_json(
+                msg="Unable to list content on %s, %s for %s and %s: %s"
+                % (node, storage, content, vmid, e)
+            )

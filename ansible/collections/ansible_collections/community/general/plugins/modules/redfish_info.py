@@ -16,8 +16,6 @@ description:
   - Builds Redfish URIs locally and sends them to remote OOB controllers to
     get information back.
   - Information retrieved is placed in a location specified by the user.
-  - This module was called C(redfish_facts) before Ansible 2.9, returning C(ansible_facts).
-    Note that the M(community.general.redfish_info) module no longer returns C(ansible_facts)!
 extends_documentation_fragment:
   - community.general.attributes
   - community.general.attributes.info_module
@@ -57,18 +55,35 @@ options:
       - Security token for authenticating to OOB controller.
     type: str
     version_added: 2.3.0
+  manager:
+    description:
+      - Name of manager on OOB controller to target.
+    type: str
+    version_added: '8.3.0'
   timeout:
     description:
       - Timeout in seconds for HTTP requests to OOB controller.
-      - The default value for this param is C(10) but that is being deprecated
-        and it will be replaced with C(60) in community.general 9.0.0.
+      - The default value for this parameter changed from V(10) to V(60)
+        in community.general 9.0.0.
     type: int
+    default: 60
   update_handle:
     required: false
     description:
       - Handle to check the status of an update in progress.
     type: str
     version_added: '6.1.0'
+  ciphers:
+    required: false
+    description:
+      - SSL/TLS Ciphers to use for the request.
+      - 'When a list is provided, all ciphers are joined in order with V(:).'
+      - See the L(OpenSSL Cipher List Format,https://www.openssl.org/docs/manmaster/man1/openssl-ciphers.html#CIPHER-LIST-FORMAT)
+        for more details.
+      - The available ciphers is dependent on the Python and OpenSSL/LibreSSL versions.
+    type: list
+    elements: str
+    version_added: 9.2.0
 
 author: "Jose Delarosa (@jose-delarosa)"
 '''
@@ -250,6 +265,15 @@ EXAMPLES = '''
       username: "{{ username }}"
       password: "{{ password }}"
 
+  - name: Get service identification
+    community.general.redfish_info:
+      category: Manager
+      command: GetServiceIdentification
+      manager: "{{ manager }}"
+      baseuri: "{{ baseuri }}"
+      username: "{{ username }}"
+      password: "{{ password }}"
+
   - name: Get software inventory
     community.general.redfish_info:
       category: Update
@@ -346,6 +370,16 @@ EXAMPLES = '''
       baseuri: "{{ baseuri }}"
       username: "{{ username }}"
       password: "{{ password }}"
+
+  - name: Check the availability of the service with a timeout of 5 seconds
+    community.general.redfish_info:
+      category: Service
+      command: CheckAvailability
+      baseuri: "{{ baseuri }}"
+      username: "{{ username }}"
+      password: "{{ password }}"
+      timeout: 5
+    register: result
 '''
 
 RETURN = '''
@@ -371,7 +405,8 @@ CATEGORY_COMMANDS_ALL = {
     "Update": ["GetFirmwareInventory", "GetFirmwareUpdateCapabilities", "GetSoftwareInventory",
                "GetUpdateStatus"],
     "Manager": ["GetManagerNicInventory", "GetVirtualMedia", "GetLogs", "GetNetworkProtocols",
-                "GetHealthReport", "GetHostInterfaces", "GetManagerInventory"],
+                "GetHealthReport", "GetHostInterfaces", "GetManagerInventory", "GetServiceIdentification"],
+    "Service": ["CheckAvailability"],
 }
 
 CATEGORY_COMMANDS_DEFAULT = {
@@ -380,7 +415,8 @@ CATEGORY_COMMANDS_DEFAULT = {
     "Accounts": "ListUsers",
     "Update": "GetFirmwareInventory",
     "Sessions": "GetSessions",
-    "Manager": "GetManagerNicInventory"
+    "Manager": "GetManagerNicInventory",
+    "Service": "CheckAvailability",
 }
 
 
@@ -395,8 +431,10 @@ def main():
             username=dict(),
             password=dict(no_log=True),
             auth_token=dict(no_log=True),
-            timeout=dict(type='int'),
+            timeout=dict(type='int', default=60),
             update_handle=dict(),
+            manager=dict(),
+            ciphers=dict(type='list', elements='str'),
         ),
         required_together=[
             ('username', 'password'),
@@ -410,16 +448,6 @@ def main():
         supports_check_mode=True,
     )
 
-    if module.params['timeout'] is None:
-        timeout = 10
-        module.deprecate(
-            'The default value {0} for parameter param1 is being deprecated and it will be replaced by {1}'.format(
-                10, 60
-            ),
-            version='9.0.0',
-            collection_name='community.general'
-        )
-
     # admin credentials used for authentication
     creds = {'user': module.params['username'],
              'pswd': module.params['password'],
@@ -431,9 +459,15 @@ def main():
     # update handle
     update_handle = module.params['update_handle']
 
+    # manager
+    manager = module.params['manager']
+
+    # ciphers
+    ciphers = module.params['ciphers']
+
     # Build root URI
     root_uri = "https://" + module.params['baseuri']
-    rf_utils = RedfishUtils(creds, root_uri, timeout, module)
+    rf_utils = RedfishUtils(creds, root_uri, timeout, module, ciphers=ciphers)
 
     # Build Category list
     if "all" in module.params['category']:
@@ -466,7 +500,13 @@ def main():
             module.fail_json(msg="Invalid Category: %s" % category)
 
         # Organize by Categories / Commands
-        if category == "Systems":
+        if category == "Service":
+            # service-level commands are always available
+            for command in command_list:
+                if command == "CheckAvailability":
+                    result["service"] = rf_utils.check_service_availability()
+
+        elif category == "Systems":
             # execute only if we find a Systems resource
             resource = rf_utils._find_systems_resource()
             if resource['ret'] is False:
@@ -581,6 +621,8 @@ def main():
                     result["host_interfaces"] = rf_utils.get_hostinterfaces()
                 elif command == "GetManagerInventory":
                     result["manager"] = rf_utils.get_multi_manager_inventory()
+                elif command == "GetServiceIdentification":
+                    result["service_id"] = rf_utils.get_service_identification(manager)
 
     # Return data back
     module.exit_json(redfish_facts=result)

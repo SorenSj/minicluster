@@ -10,7 +10,7 @@ __metaclass__ = type
 DOCUMENTATION = """
     name: sops
     author: Edoardo Tenani (@endorama) <e.tenani@arduino.cc>
-    short_description: Read sops encrypted file contents
+    short_description: Read SOPS-encrypted file contents
     version_added: '0.1.0'
     description:
         - This lookup returns the contents from a file on the Ansible controller's file system.
@@ -31,8 +31,8 @@ DOCUMENTATION = """
             default: false
         input_type:
             description:
-                - Tell sops how to interpret the encrypted file.
-                - By default, sops will chose the input type from the file extension.
+                - Tell SOPS how to interpret the encrypted file.
+                - By default, SOPS will chose the input type from the file extension.
                   If it detects the wrong type for a file, this could result in decryption
                   failing.
             type: str
@@ -43,8 +43,8 @@ DOCUMENTATION = """
                 - dotenv
         output_type:
             description:
-                - Tell sops how to interpret the decrypted file.
-                - By default, sops will chose the output type from the file extension.
+                - Tell SOPS how to interpret the decrypted file.
+                - By default, SOPS will chose the output type from the file extension.
                   If it detects the wrong type for a file, this could result in decryption
                   failing.
             type: str
@@ -55,7 +55,7 @@ DOCUMENTATION = """
                 - dotenv
         empty_on_not_exist:
             description:
-                - When set to C(true), will not raise an error when a file cannot be found,
+                - When set to V(true), will not raise an error when a file cannot be found,
                   but return an empty string instead.
             type: bool
             default: false
@@ -67,14 +67,12 @@ DOCUMENTATION = """
     notes:
         - This lookup does not understand 'globbing' - use the fileglob lookup instead.
     seealso:
-        - ref: community.sops.decrypt filter <ansible_collections.community.sops.decrypt_filter>
-          description: The decrypt filter can be used to descrypt sops-encrypted in-memory data.
-        # - plugin: community.sops.decrypt
-        #   plugin_type: filter
-        - ref: community.sops.sops vars plugin <ansible_collections.community.sops.sops_vars>
-          description: The sops vars plugin can be used to load sops-encrypted host or group variables.
-        # - plugin: community.sops.sops
-        #   plugin_type: vars
+        - plugin: community.sops.decrypt
+          plugin_type: filter
+          description: The decrypt filter can be used to descrypt SOPS-encrypted in-memory data.
+        - plugin: community.sops.sops
+          plugin_type: vars
+          description: The sops vars plugin can be used to load SOPS-encrypted host or group variables.
         - module: community.sops.load_vars
 """
 

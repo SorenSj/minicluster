@@ -21,6 +21,8 @@ attributes:
     support: full
   diff_mode:
     support: none
+  action_group:
+    version_added: 9.0.0
 options:
   hostname:
     description:
@@ -86,11 +88,12 @@ options:
 
 notes:
   - Requires proxmoxer and requests modules on host. These modules can be installed with pip.
-requirements: [ "proxmoxer", "python >= 2.7", "requests" ]
+requirements: [ "proxmoxer", "requests" ]
 author: Jeffrey van Pelt (@Thulium-Drake)
 extends_documentation_fragment:
-    - community.general.proxmox.documentation
-    - community.general.attributes
+  - community.general.proxmox.actiongroup_proxmox
+  - community.general.proxmox.documentation
+  - community.general.attributes
 '''
 
 EXAMPLES = r'''

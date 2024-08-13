@@ -35,7 +35,9 @@ options:
     default: false
   name:
     description:
-      - A package name, like V(foo), or multiple packages, like V(foo, bar).
+      - A package name, like V(foo), or multiple packages, like V(foo,bar).
+      - Do not include additional whitespace when specifying multiple packages as a string.
+        Prefer YAML lists over comma-separating multiple package names.
     type: list
     elements: str
   no_cache:
@@ -61,7 +63,7 @@ options:
     type: str
   update_cache:
     description:
-      - Update repository indexes. Can be run with other steps or on it's own.
+      - Update repository indexes. Can be run with other steps or on its own.
     type: bool
     default: false
   upgrade:

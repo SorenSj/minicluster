@@ -23,8 +23,7 @@ description:
   - Manage (add, remove, change) individual settings in an INI-style file without having
     to manage the file as a whole with, say, M(ansible.builtin.template) or M(ansible.builtin.assemble).
   - Adds missing sections if they don't exist.
-  - Before Ansible 2.0, comments are discarded when the source file is read, and therefore will not show up in the destination file.
-  - Since Ansible 2.3, this module adds missing ending newlines to files to keep in line with the POSIX standard, even when
+  - This module adds missing ending newlines to files to keep in line with the POSIX standard, even when
     no other modifications need to be applied.
 attributes:
   check_mode:
@@ -35,7 +34,6 @@ options:
   path:
     description:
       - Path to the INI-style file; this file is created if required.
-      - Before Ansible 2.3 this option was only usable as O(dest).
     type: path
     required: true
     aliases: [ dest ]
@@ -43,9 +41,33 @@ options:
     description:
       - Section name in INI file. This is added if O(state=present) automatically when
         a single value is being set.
-      - If left empty, being omitted, or being set to V(null), the O(option) will be placed before the first O(section).
-      - Using V(null) is also required if the config format does not support sections.
+      - If being omitted, the O(option) will be placed before the first O(section).
+      - Omitting O(section) is also required if the config format does not support sections.
     type: str
+  section_has_values:
+    type: list
+    elements: dict
+    required: false
+    suboptions:
+      option:
+        type: str
+        description: Matching O(section) must contain this option.
+        required: true
+      value:
+        type: str
+        description: Matching O(section_has_values[].option) must have this specific value.
+      values:
+        description:
+          - The string value to be associated with an O(section_has_values[].option).
+          - Mutually exclusive with O(section_has_values[].value).
+          - O(section_has_values[].value=v) is equivalent to O(section_has_values[].values=[v]).
+        type: list
+        elements: str
+    description:
+      - Among possibly multiple sections of the same name, select the first one that contains matching options and values.
+      - With O(state=present), if a suitable section is not found, a new section will be added, including the required options.
+      - With O(state=absent), at most one O(section) is removed if it contains the values.
+    version_added: 8.6.0
   option:
     description:
       - If set (required for changing a O(value)), this is the name of the option.
@@ -133,7 +155,6 @@ options:
     version_added: 7.1.0
 notes:
    - While it is possible to add an O(option) without specifying a O(value), this makes no sense.
-   - As of Ansible 2.3, the O(dest) option has been changed to O(path) as default, but O(dest) still works as well.
    - As of community.general 3.2.0, UTF-8 BOM markers are discarded when reading files.
 author:
     - Jan-Piet Mens (@jpmens)
@@ -141,7 +162,6 @@ author:
 '''
 
 EXAMPLES = r'''
-# Before Ansible 2.3, option 'dest' was used instead of 'path'
 - name: Ensure "fav=lemonade is in section "[drinks]" in specified file
   community.general.ini_file:
     path: /etc/conf
@@ -177,6 +197,64 @@ EXAMPLES = r'''
     values:
       - coke
       - pepsi
+    mode: '0600'
+    state: present
+
+- name: Add "beverage=lemon juice" outside a section in specified file
+  community.general.ini_file:
+    path: /etc/conf
+    option: beverage
+    value: lemon juice
+    state: present
+
+- name: Remove the peer configuration for 10.128.0.11/32
+  community.general.ini_file:
+    path: /etc/wireguard/wg0.conf
+    section: Peer
+    section_has_values:
+      - option: AllowedIps
+        value: 10.128.0.11/32
+    mode: '0600'
+    state: absent
+
+- name: Add "beverage=lemon juice" outside a section in specified file
+  community.general.ini_file:
+    path: /etc/conf
+    option: beverage
+    value: lemon juice
+    state: present
+
+- name: Update the public key for peer 10.128.0.12/32
+  community.general.ini_file:
+    path: /etc/wireguard/wg0.conf
+    section: Peer
+    section_has_values:
+      - option: AllowedIps
+        value: 10.128.0.12/32
+    option: PublicKey
+    value: xxxxxxxxxxxxxxxxxxxx
+    mode: '0600'
+    state: present
+
+- name: Remove the peer configuration for 10.128.0.11/32
+  community.general.ini_file:
+    path: /etc/wireguard/wg0.conf
+    section: Peer
+    section_has_values:
+      - option: AllowedIps
+        value: 10.4.0.11/32
+    mode: '0600'
+    state: absent
+
+- name: Update the public key for peer 10.128.0.12/32
+  community.general.ini_file:
+    path: /etc/wireguard/wg0.conf
+    section: Peer
+    section_has_values:
+      - option: AllowedIps
+        value: 10.4.0.12/32
+    option: PublicKey
+    value: xxxxxxxxxxxxxxxxxxxx
     mode: '0600'
     state: present
 '''
@@ -219,7 +297,19 @@ def update_section_line(option, changed, section_lines, index, changed_lines, ig
     return (changed, msg)
 
 
-def do_ini(module, filename, section=None, option=None, values=None,
+def check_section_has_values(section_has_values, section_lines):
+    if section_has_values is not None:
+        for condition in section_has_values:
+            for line in section_lines:
+                match = match_opt(condition["option"], line)
+                if match and (len(condition["values"]) == 0 or match.group(7) in condition["values"]):
+                    break
+            else:
+                return False
+    return True
+
+
+def do_ini(module, filename, section=None, section_has_values=None, option=None, values=None,
            state='present', exclusive=True, backup=False, no_extra_spaces=False,
            ignore_spaces=False, create=True, allow_no_value=False, modify_inactive_option=True, follow=False):
 
@@ -301,15 +391,25 @@ def do_ini(module, filename, section=None, option=None, values=None,
     before = after = []
     section_lines = []
 
+    section_pattern = re.compile(to_text(r'^\[\s*%s\s*]' % re.escape(section.strip())))
+
     for index, line in enumerate(ini_lines):
-        # find start and end of section
-        if line.startswith(u'[%s]' % section):
-            within_section = True
-            section_start = index
-        elif line.startswith(u'['):
-            if within_section:
+        # end of section:
+        if within_section and line.startswith(u'['):
+            if check_section_has_values(
+                section_has_values, ini_lines[section_start:index]
+            ):
                 section_end = index
                 break
+            else:
+                # look for another section
+                within_section = False
+                section_start = section_end = 0
+
+        # find start and end of section
+        if section_pattern.match(line):
+            within_section = True
+            section_start = index
 
     before = ini_lines[0:section_start]
     section_lines = ini_lines[section_start:section_end]
@@ -430,6 +530,18 @@ def do_ini(module, filename, section=None, option=None, values=None,
     if not within_section and state == 'present':
         ini_lines.append(u'[%s]\n' % section)
         msg = 'section and option added'
+        if section_has_values:
+            for condition in section_has_values:
+                if condition['option'] != option:
+                    if len(condition['values']) > 0:
+                        for value in condition['values']:
+                            ini_lines.append(assignment_format % (condition['option'], value))
+                    elif allow_no_value:
+                        ini_lines.append(u'%s\n' % condition['option'])
+                elif not exclusive:
+                    for value in condition['values']:
+                        if value not in values:
+                            values.append(value)
         if option and values:
             for value in values:
                 ini_lines.append(assignment_format % (option, value))
@@ -471,6 +583,11 @@ def main():
         argument_spec=dict(
             path=dict(type='path', required=True, aliases=['dest']),
             section=dict(type='str'),
+            section_has_values=dict(type='list', elements='dict', options=dict(
+                option=dict(type='str', required=True),
+                value=dict(type='str'),
+                values=dict(type='list', elements='str')
+            ), default=None, mutually_exclusive=[['value', 'values']]),
             option=dict(type='str'),
             value=dict(type='str'),
             values=dict(type='list', elements='str'),
@@ -493,6 +610,7 @@ def main():
 
     path = module.params['path']
     section = module.params['section']
+    section_has_values = module.params['section_has_values']
     option = module.params['option']
     value = module.params['value']
     values = module.params['values']
@@ -514,8 +632,16 @@ def main():
     elif values is None:
         values = []
 
+    if section_has_values:
+        for condition in section_has_values:
+            if condition['value'] is not None:
+                condition['values'] = [condition['value']]
+            elif condition['values'] is None:
+                condition['values'] = []
+#        raise Exception("section_has_values: {}".format(section_has_values))
+
     (changed, backup_file, diff, msg) = do_ini(
-        module, path, section, option, values, state, exclusive, backup,
+        module, path, section, section_has_values, option, values, state, exclusive, backup,
         no_extra_spaces, ignore_spaces, create, allow_no_value, modify_inactive_option, follow)
 
     if not module.check_mode and os.path.exists(path):

@@ -13,8 +13,6 @@ DOCUMENTATION = r'''
 module: cloudflare_dns
 author:
 - Michael Gruener (@mgruener)
-requirements:
-   - python >= 2.6
 short_description: Manage Cloudflare DNS records
 description:
    - "Manages dns records via the Cloudflare API, see the docs: U(https://api.cloudflare.com/)."
@@ -99,7 +97,6 @@ options:
     description:
     - Service protocol. Required for O(type=SRV) and O(type=TLSA).
     - Common values are TCP and UDP.
-    - Before Ansible 2.6 only TCP and UDP were available.
     type: str
   proxied:
     description:
@@ -151,9 +148,9 @@ options:
   type:
     description:
       - The type of DNS record to create. Required if O(state=present).
-      - O(type=DS), O(type=SSHFP), and O(type=TLSA) were added in Ansible 2.7.
+      - Support for V(SPF) has been removed from community.general 9.0.0 since that record type is no longer supported by CloudFlare.
     type: str
-    choices: [ A, AAAA, CNAME, DS, MX, NS, SPF, SRV, SSHFP, TLSA, CAA, TXT ]
+    choices: [ A, AAAA, CNAME, DS, MX, NS, SRV, SSHFP, TLSA, CAA, TXT ]
   value:
     description:
     - The record value.
@@ -638,7 +635,7 @@ class CloudflareAPI(object):
                 content = str(params['key_tag']) + '\t' + str(params['algorithm']) + '\t' + str(params['hash_type']) + '\t' + params['value']
         elif params['type'] == 'SSHFP':
             if not (params['value'] is None or params['value'] == ''):
-                content = str(params['algorithm']) + '\t' + str(params['hash_type']) + '\t' + params['value']
+                content = str(params['algorithm']) + ' ' + str(params['hash_type']) + ' ' + params['value'].upper()
         elif params['type'] == 'TLSA':
             if not (params['value'] is None or params['value'] == ''):
                 content = str(params['cert_usage']) + '\t' + str(params['selector']) + '\t' + str(params['hash_type']) + '\t' + params['value']
@@ -677,7 +674,7 @@ class CloudflareAPI(object):
         if (params['type'] is None) or (params['record'] is None):
             self.module.fail_json(msg="You must provide a type and a record to create a new record")
 
-        if (params['type'] in ['A', 'AAAA', 'CNAME', 'TXT', 'MX', 'NS', 'SPF']):
+        if (params['type'] in ['A', 'AAAA', 'CNAME', 'TXT', 'MX', 'NS']):
             if not params['value']:
                 self.module.fail_json(msg="You must provide a non-empty value to create this record type")
 
@@ -751,7 +748,7 @@ class CloudflareAPI(object):
                 if (attr is None) or (attr == ''):
                     self.module.fail_json(msg="You must provide algorithm, hash_type and a value to create this record type")
             sshfp_data = {
-                "fingerprint": params['value'],
+                "fingerprint": params['value'].upper(),
                 "type": params['hash_type'],
                 "algorithm": params['algorithm'],
             }
@@ -761,7 +758,7 @@ class CloudflareAPI(object):
                 'data': sshfp_data,
                 "ttl": params['ttl'],
             }
-            search_value = str(params['algorithm']) + '\t' + str(params['hash_type']) + '\t' + params['value']
+            search_value = str(params['algorithm']) + ' ' + str(params['hash_type']) + ' ' + params['value']
 
         if params['type'] == 'TLSA':
             for attr in [params['port'], params['proto'], params['cert_usage'], params['selector'], params['hash_type'], params['value']]:
@@ -872,7 +869,7 @@ def main():
             state=dict(type='str', default='present', choices=['absent', 'present']),
             timeout=dict(type='int', default=30),
             ttl=dict(type='int', default=1),
-            type=dict(type='str', choices=['A', 'AAAA', 'CNAME', 'DS', 'MX', 'NS', 'SPF', 'SRV', 'SSHFP', 'TLSA', 'CAA', 'TXT']),
+            type=dict(type='str', choices=['A', 'AAAA', 'CNAME', 'DS', 'MX', 'NS', 'SRV', 'SSHFP', 'TLSA', 'CAA', 'TXT']),
             value=dict(type='str', aliases=['content']),
             weight=dict(type='int', default=1),
             zone=dict(type='str', required=True, aliases=['domain']),

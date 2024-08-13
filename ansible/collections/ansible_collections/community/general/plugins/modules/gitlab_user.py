@@ -27,7 +27,6 @@ author:
   - Lennert Mertens (@LennertMertens)
   - Stef Graces (@stgrace)
 requirements:
-  - python >= 2.7
   - python-gitlab python module
   - administrator rights on the GitLab server
 extends_documentation_fragment:
@@ -151,7 +150,6 @@ EXAMPLES = '''
   community.general.gitlab_user:
     api_url: https://gitlab.example.com/
     api_token: "{{ access_token }}"
-    validate_certs: false
     username: myusername
     state: absent
 
@@ -191,7 +189,6 @@ EXAMPLES = '''
   community.general.gitlab_user:
     api_url: https://gitlab.example.com/
     api_token: "{{ access_token }}"
-    validate_certs: false
     username: myusername
     state: blocked
 
@@ -199,7 +196,6 @@ EXAMPLES = '''
   community.general.gitlab_user:
     api_url: https://gitlab.example.com/
     api_token: "{{ access_token }}"
-    validate_certs: false
     username: myusername
     state: unblocked
 '''
@@ -234,7 +230,7 @@ from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.common.text.converters import to_native
 
 from ansible_collections.community.general.plugins.module_utils.gitlab import (
-    auth_argument_spec, find_group, gitlab_authentication, gitlab, ensure_gitlab_package
+    auth_argument_spec, find_group, gitlab_authentication, gitlab, list_all_kwargs
 )
 
 
@@ -349,9 +345,10 @@ class GitLabUser(object):
     @param sshkey_name Name of the ssh key
     '''
     def ssh_key_exists(self, user, sshkey_name):
-        keyList = map(lambda k: k.title, user.keys.list(all=True))
-
-        return sshkey_name in keyList
+        return any(
+            k.title == sshkey_name
+            for k in user.keys.list(**list_all_kwargs)
+        )
 
     '''
     @param user User object
@@ -519,10 +516,13 @@ class GitLabUser(object):
     @param username Username of the user
     '''
     def find_user(self, username):
-        users = self._gitlab.users.list(search=username, all=True)
-        for user in users:
-            if (user.username == username):
-                return user
+        return next(
+            (
+                user for user in self._gitlab.users.list(search=username, **list_all_kwargs)
+                if user.username == username
+            ),
+            None
+        )
 
     '''
     @param username Username of the user
@@ -616,7 +616,9 @@ def main():
             ('state', 'present', ['name', 'email']),
         )
     )
-    ensure_gitlab_package(module)
+
+    # check prerequisites and connect to gitlab server
+    gitlab_instance = gitlab_authentication(module)
 
     user_name = module.params['name']
     state = module.params['state']
@@ -634,8 +636,6 @@ def main():
     user_external = module.params['external']
     user_identities = module.params['identities']
     overwrite_identities = module.params['overwrite_identities']
-
-    gitlab_instance = gitlab_authentication(module)
 
     gitlab_user = GitLabUser(module, gitlab_instance)
     user_exists = gitlab_user.exists_user(user_username)
