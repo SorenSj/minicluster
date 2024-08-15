@@ -1,9 +1,8 @@
 ---
-
-- name: Configure Mini Cluster Gateway
-  hosts: gateway
+- name: Configure Mini Cluster tools2
+  hosts: tools2
   gather_facts: true
-  tags: [gateway]
+  tags: [tools2]
   become: true
 
   pre_tasks:
@@ -13,7 +12,7 @@
 #   - name: Include gateway variables
 #     ansible.builtin.include_vars:
 #        dir: host_vars
-#        files_matching: gateway.yml
+#        files_matching: tools1.yml
 #      tags: ["always"]
 #    - name: Collect facts
 #      ansible.builtin.setup:
@@ -40,30 +39,6 @@
       tags:
         - os
 
-    - name: Include dnsmasq
-      ansible.builtin.import_role:
-        name: sorensj.dnsmasq
-      tags:
-        - dnsmasq
-
-#    - name: Security Hardening
-#      ansible.builtin.import_role:
-#        name: sorensj.security
-#      tags:
-#        - security
-
-#    - name: Update DNS server to point to DNSmasq
-#      ansible.builtin.import_role:
-#        name: dns
-#      tags:
-#        - dns
-
-#    - name: Firewall (nftables) configuration
-#      ansible.builtin.import_role:
-#        name: ricsanfre.firewall
-#      tags:
-#        - firewall
-
 #    - name: NTP Server configuration
 #      ansible.builtin.import_role:
 #        name: ricsanfre.ntp
@@ -75,4 +50,3 @@
 #        name: pxe-server
 #      tags:
 #        - pxe
-
