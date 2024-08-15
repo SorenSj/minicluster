@@ -66,6 +66,7 @@ dmz_network_dhcp_range_from_ipv4: 10.0.2.100
 dmz_network_dhcp_range_from_ipv6: ::ffff:a00:264
 dmz_network_dhcp_range_until_ipv4: 10.0.2.199
 dmz_network_dhcp_range_until_ipv6: ::ffff:a00:2c7
+dmz_ks_server_ip: 10.0.2.21
 # WiFi network
 wifi_domain_name: wifi.mylabnet.dk
 wifi_port_name: enx00e04c680072

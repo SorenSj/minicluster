@@ -174,3 +174,13 @@ autoinstall:
       device: format-3
       id: mount-3
       type: mount
+
+########################
+# PXE server variables #
+########################
+kick_start_server: "{{ dmz_ks_server_ip }}"
+
+##########################
+# Vault server variables #
+##########################
+vault_version: 1.17.3

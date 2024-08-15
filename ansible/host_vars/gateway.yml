@@ -253,13 +253,3 @@ nft_nat_host_postrouting_rules:
 # restic backup role variables #
 ################################
 restic_clean_service: true
-
-########################
-# PXE server variables #
-########################
-kick_start_server: "{{ dmz_network_if_ip }}"
-
-##########################
-# Vault server variables #
-##########################
-vault_version: 1.15.6
