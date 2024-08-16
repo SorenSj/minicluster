@@ -43,8 +43,8 @@
     - name: Include vault variables
       include_vars: "vars/vault.yml"
 
-    - name: Include picluster variables
-      include_vars: "vars/picluster.yml"
+    - name: Include minicluster variables
+      include_vars: "vars/minicluster.yml"
 
   tasks:
     - name: Create namespaces.
