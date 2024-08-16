@@ -1,15 +1,12 @@
 # MiniPC Kubernetes Cluster
 
-
 **K3S Kubernetes Cluster at home automated with Ansible and ArgoCD**
-
 
 This is an educational project to build a x86 Kubernetes cluster at home, using refurbished x86 mini PCs, learn to deploy basic kubernetes services and automate its deployment and configuration applying IaC (infrastructure as a code) and GitOps methodologies.
 
+The entire process for creating this cluster at home, from cluster design and architecture to step-by-step manual configuration guides, has been documented and it is published in the project website: <https://cluster.mylabnet.dk>.
 
-The entire process for creating this cluster at home, from cluster design and architecture to step-by-step manual configuration guides, has been documented and it is published in the project website: https://cluster.mylabnet.dk.
-
-This repository contains all source code used to automate all manual tasks described in the documentation: Cloud-init's configuration files, Ansible's source code (playbooks/roles), and packaged Kubernetes applications (helm and kustomize) to be deployed using ArgoCD. 
+This repository contains all source code used to automate all manual tasks described in the documentation: Cloud-init's configuration files, Ansible's source code (playbooks/roles), and packaged Kubernetes applications (helm and kustomize) to be deployed using ArgoCD.
 
 Since its deployment is completely automated, the cluster can be re-deployed in minutes as many times as needed for testing new cluster configurations, new software versions or just take you out of any mesh you could cause playing with the cluster.
 
@@ -88,12 +85,12 @@ The following picture shows the set of opensource solutions used so far in the c
         <td><img width="32" src="docs/assets/img/logos/nginx.svg"></td>
         <td><a href="https://kubernetes.github.io/ingress-nginx/">Ingress NGINX</a></td>
         <td>Kubernetes Ingress Controller</td>
-    </tr> 
+    </tr>
     <tr>
         <td><img width="32" src="docs/assets/img/logos/traefik.svg"></td>
         <td><a href="https://traefik.io/">Traefik</a></td>
         <td>Kubernetes Ingress Controller (alternative)</td>
-    </tr>   
+    </tr>
     <tr>
         <td><img width="32" src="docs/assets/img/logos/linkerd.svg"></td>
         <td><a href="https://linkerd.io/">Linkerd</a></td>
@@ -187,13 +184,11 @@ The following picture shows the set of opensource solutions used so far in the c
 </table>
 </div>
 
-
 ## External Resources and Services
 
 Even whe the premise is to deploy all services in the kubernetes cluster, there is still a need for a few external services/resources. Below is a list of external resources/services and why we need them.
 
 ### Cloud external services
-
 
 |  |Provider | Resource | Purpose |
 | --- | --- | --- | --- |
@@ -214,7 +209,7 @@ Even whe the premise is to deploy all services in the kubernetes cluster, there 
 
    Currently only acme issuer (letsencytp) using IONOS as dns-01 challenge provider is configured. Check list of [supported dns01 providers](https://cert-manager.io/docs/configuration/acme/dns01/#supported-dns01-providers).
 
-### Self-hosted external services 
+### Self-hosted external services
 
 There is another list of services that I have decided to run outside the kuberentes cluster selfhosting them..
 
@@ -231,21 +226,19 @@ Vault service is running in `gateway` node, since Vault kubernetes authenticatio
 
 Home lab architecture, showed in the picture below, consist of a Kubernetes cluster of ARM (Rasbperry PI) and x86 (HP elitedesk 800 G3 mini PCs) nodes and a firewall, built with another Raspberry PI, to isolate cluster network from your home network.
 
-
 <p align="center">
   <img src="docs/assets/img/picluster-architecture.png" width="500"/>
 </p>
-
 
 See further details about the architecture and hardware in the [documentation](https://picluster.ricsanfre.com/docs/home/)
 
 ## Official Site
 
-You can browse more information about Pi Cluster Project on https://picluster.ricsanfre.com/. 
+You can browse more information about Pi Cluster Project on <https://picluster.ricsanfre.com/>.
 
 The content of this website and the source code to build it (Jekyll static based website) are also stored in this repo: `/docs` folder.
 
-## Usage 
+## Usage
 
 Check out the documentation [Quick Start guide](http://picluster.ricsanfre.com/docs/ansible/) to know how to use and tweak cloud-init files (`/cloud-init` folder), Ansible playbooks (`/ansible` folder) and packaged Kubernetes applications ( `/argocd` folder) contained in this repository, so you can use in for your own homelab.
 
