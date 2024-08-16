@@ -4,3 +4,4 @@
 /certificates
 /docs/_site
 user-data.*
+/ansible/.vscode
