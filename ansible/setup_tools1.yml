@@ -39,12 +39,18 @@
       tags:
         - os
 
-#    - name: NTP Server configuration
-#      ansible.builtin.import_role:
-#        name: ricsanfre.ntp
-#      tags:
-#        - ntp
+    - name: NTP Server configuration
+      ansible.builtin.import_role:
+        name: ricsanfre.ntp
+      tags:
+        - ntp
 
+    - name: Apt cacher NG configuration
+      ansible.builtin.import_role:
+        name: sorensj.apt-cacher-ng
+      tags:
+        - apt-cacher-ng
+    
 #    - name: PXE server
 #      ansible.builtin.import_role:
 #        name: pxe-server
