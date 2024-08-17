@@ -10,6 +10,27 @@ kick_start_server: "{{ dmz_ks_server_ip }}"
 ##########################
 vault_version: 1.17.3
 
+########################
+# NTP server variables #
+########################
+ntp_server: "{{ dmz_ntp_server_ip }}"
+ntp_server_fqdn: "{{ dmz_ntp_server_fqdn }}"
+ntp_server_zone: "{{ dmz_ntp_server_zone }}"
+
+###############################
+# Apt cacher server variables #
+###############################
+apt_cacher_server: "{{ dmz_apt_cacher_server_ip }}"
+apt_cacher_server_fqdn: "{{ dmz_apt_cacher_server_fqdn }}"
+apt_cacher_server_zone: "{{ dmz_apt_cacher_server_zone }}"
+apt_cacher_server_port: 3142
+
+########################
+# NFS server variables #
+########################
+nfs_server_path: /srv/nfshare
+nfs_server_export: "{{ dmz_network_cidr_ipv4 }}(rw,sync,no_subtree_check,no_root_squash)"
+
 ############################
 # Grafana server variables #
 ############################
@@ -19,9 +40,3 @@ grafana_version: 7.5.7
 # Rancher server variables #
 ############################
 rancher_version: 2.5.8
-
-########################
-# NFS server variables #
-########################
-nfs_server_path: /srv/nfshare
-nfs_server_export: "{{ dmz_network_cidr_ipv4 }}(rw,sync,no_subtree_check,no_root_squash)"
