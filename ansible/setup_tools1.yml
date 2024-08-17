@@ -1,19 +1,14 @@
 ---
-- name: Configure Mini Cluster tools2
-  hosts: tools2
+- name: Configure Mini Cluster tools1
+  hosts: tools1
   gather_facts: true
-  tags: [tools2]
+  tags: [tools1]
   become: true
 
   pre_tasks:
     - name: Include vault variables
       ansible.builtin.include_vars: "vault.yml"
       tags: ["always"]
-#   - name: Include gateway variables
-#     ansible.builtin.include_vars:
-#        dir: host_vars
-#        files_matching: tools1.yml
-#      tags: ["always"]
 #    - name: Collect facts
 #      ansible.builtin.setup:
 #        gather_subset:
@@ -50,7 +45,13 @@
         name: sorensj.apt-cacher-ng
       tags:
         - apt-cacher-ng
-    
+
+    - name: TFTP server with support for PXE
+      ansible.builtin.import_role:
+        name: sorensj.tftp-pxe
+      tags:
+        - tftp-pxe
+
 #    - name: PXE server
 #      ansible.builtin.import_role:
 #        name: pxe-server
