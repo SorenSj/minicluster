@@ -52,7 +52,7 @@ lan_network_dhcp_range_from_ipv6: ::ffff:a00:164
 lan_network_dhcp_range_until_ipv4: 10.0.1.199
 lan_network_dhcp_range_until_ipv6: ::ffff:a00:1c7
 # DMZ network
-dmz_domain_name: dmzmylabnet.dk
+dmz_domain_name: dmz.mylabnet.dk
 dmz_port_name: enx00e04c680063
 dmz_network_cidr_ipv4: 10.0.2.0/24
 dmz_network_cidr_ipv6: ::ffff:a00:200/112
@@ -83,14 +83,35 @@ wifi_network_dhcp_range_from_ipv6: ::ffff:a00:364
 wifi_network_dhcp_range_until_ipv4: 10.0.3.199
 wifi_network_dhcp_range_until_ipv6: ::ffff:a00:3c7
 
-# Global DNS servers
+#####################
+# NTP configuration #
+#####################
+ntp_server:
+  - 0.dk.pool.ntp.org
+  - 1.dk.pool.ntp.org
+  - 2.dk.pool.ntp.org
+  - 3.dk.pool.ntp.org
+
+######################
+# Global DNS servers #
+######################
 global_dns1_ipv4: 108.162.195.90
 global_dns2_ipv4: 162.159.38.251
 global_dns3_ipv4: 8.8.8.8
 global_dns4_ipv4: 8.8.4.4
 
-# TFTP configuration
+######################
+# TFTP configuration #
+######################
 tftp_dir_path: "/srv/tftp"
+
+###############################
+# Apt cacher server variables #
+###############################
+dmz_apt_cacher_server_ip: 10.0.2.41
+dmz_apt_cacher_server_fqdn: apt-cacher.mylabnet.dk
+dmz_apt_cacher_server_zone: dmz.mylabnet.dk
+dmz_apt_cacher_server_port: 3142
 
 ################################
 # restic backup role variables #
